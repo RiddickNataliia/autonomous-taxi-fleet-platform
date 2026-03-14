@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NovaDrive.Api/NovaDrive.Api.csproj" />
+    <Project Path="src/NovaDrive.Application/NovaDrive.Application.csproj" />
+    <Project Path="src/NovaDrive.Domain/NovaDrive.Domain.csproj" />
+    <Project Path="src/NovaDrive.Infrastructure/NovaDrive.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NovaDrive.Tests/NovaDrive.Tests.csproj" />
+  </Folder>
+</Solution>

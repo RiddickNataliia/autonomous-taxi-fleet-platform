@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaDrive.Api", "NovaDrive.Api.csproj", "{FBBFFF8F-998E-C63C-DA07-55756D05EC10}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaDrive.Domain", "NovaDrive.Domain.csproj", "{342FD84C-D4A3-FB76-7EE1-378A98ED4659}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,15 +10,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FBBFFF8F-998E-C63C-DA07-55756D05EC10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FBBFFF8F-998E-C63C-DA07-55756D05EC10}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FBBFFF8F-998E-C63C-DA07-55756D05EC10}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FBBFFF8F-998E-C63C-DA07-55756D05EC10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{342FD84C-D4A3-FB76-7EE1-378A98ED4659}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{342FD84C-D4A3-FB76-7EE1-378A98ED4659}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{342FD84C-D4A3-FB76-7EE1-378A98ED4659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{342FD84C-D4A3-FB76-7EE1-378A98ED4659}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {82F871EB-0D24-46A2-BC71-41D956B7E490}
+		SolutionGuid = {F47EF096-565D-4FF6-843F-B9183FFD9381}
 	EndGlobalSection
 EndGlobal
