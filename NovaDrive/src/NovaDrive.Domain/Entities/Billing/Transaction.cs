@@ -17,6 +17,7 @@ public class Transaction
     /// Marks the transaction as successful when payment is confirmed by the gateway.
     /// </summary>
     /// <param name="reference">The unique reference ID from the bank.</param>
+    /// <exception cref="TransactionDomainException">Thrown if transaction satus is not Pending or bank reference is null or empty string</exception>
     public void MarkAsSuccessful(string reference)
     {
         if (Status != TransactionStatus.Pending)
@@ -32,6 +33,7 @@ public class Transaction
     /// <summary>
     /// Marks the transaction as failed.
     /// </summary>
+    /// <exception cref="TransactionDomainException">Thrown if transaction satus is not Pending</exception>
     public void MarkAsFailed()
     {
         if (Status != TransactionStatus.Pending)

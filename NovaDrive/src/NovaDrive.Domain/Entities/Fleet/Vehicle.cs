@@ -1,3 +1,5 @@
+using System.Reflection.Metadata.Ecma335;
+
 namespace NovaDrive.Domain.Entities;
 
 public class Vehicle
@@ -24,24 +26,34 @@ public class Vehicle
     /// <exception cref="VehicleDomainException">Thrown if the vehicle is overdue for an inspection.</exception>
     public void Activate() 
     {
+        if (Status == VehicleStatus.Active) return;
+
         if (NeedsInspection())
             throw new VehicleDomainException(VehicleDomainException.InspectionRequired);
         
-        if (!Battery.CanBeActivated)
+        if (Battery.IsLow)
             throw new VehicleDomainException(VehicleDomainException.LowBattery);
 
         Status = VehicleStatus.Active;
     }
 
     /// <summary>
-    /// Temporarily takes the vehicle out of service (e.g., for maintenance or repair).
+    /// Temporarily takes the vehicle out of service.
     /// </summary>
-    public void Deactivate() => Status = VehicleStatus.Inactive;
+    public void Deactivate()
+    {
+        if (Status == VehicleStatus.Inactive) return;
+        Status = VehicleStatus.Inactive;
+    }
 
     /// <summary>
     /// Manually marks vehicle for maintenance
     /// </summary>
-    public void MarkForMaintenance() => Status = VehicleStatus.Maintenance;
+    public void MarkForMaintenance()
+    {
+        if (Status == VehicleStatus.Maintenance) return;
+        Status = VehicleStatus.Maintenance;
+    }
 
     /// <summary>
     /// Records a successful safety inspection, resetting the 12-month inspection timer.
@@ -61,14 +73,20 @@ public class Vehicle
 
     /// <summary>
     /// Assigns a new API key to this vehicle.
-    /// The caller is responsible for passing an already-hashed value —
-    /// the domain never handles or stores raw keys.
     /// </summary>
     /// <param name="hashedKey">The BCrypt hash of the generated API key.</param>
     public void SetApiKey(string hashedKey)
     {
         if (string.IsNullOrWhiteSpace(hashedKey))
             throw new VehicleDomainException(VehicleDomainException.InvalidApiKey);
+
+        if (!hashedKey.StartsWith("$2") || hashedKey.Length != 60)
+            throw new VehicleDomainException(VehicleDomainException.InvalidApiKey);
+
+        if (Status == VehicleStatus.EnRoute)
+            throw new VehicleDomainException(VehicleDomainException.CannotRotateKeyWhileEnRoute);
+
+        if (ApiKeyHash == hashedKey) return;
 
         ApiKeyHash = hashedKey;
     }
@@ -84,7 +102,7 @@ public class Vehicle
         if (Battery.IsCritical)
         {
             if (Status == VehicleStatus.EnRoute)
-                Status = VehicleStatus.Maintenance; // stranded mid-ride
+                Status = VehicleStatus.Maintenance; // stranded mid-ride (maybe I'll add sending a replacement later)
             else if (Status == VehicleStatus.Active)
                 Status = VehicleStatus.Inactive;
         }

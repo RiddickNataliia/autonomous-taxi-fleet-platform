@@ -20,6 +20,9 @@ public class SupportTicket
     public static SupportTicket Create(Guid passengerId, string subject, string description, TicketPriority priority)
     {
         if (string.IsNullOrWhiteSpace(subject)) throw new SupportDomainException(SupportDomainException.InvalidSubject);
+
+        if (string.IsNullOrWhiteSpace(description)) 
+            throw new SupportDomainException(SupportDomainException.InvalidDescription);
         
         return new SupportTicket
         {
@@ -47,7 +50,9 @@ public class SupportTicket
     /// </summary>
     public void Resolve()
     {
-        if (Status == TicketStatus.Resolved) return;
+
+        if (Status != TicketStatus.InProgress)
+            throw new SupportDomainException(SupportDomainException.NotInProgress);
 
         Status = TicketStatus.Resolved;
         ResolvedAt = DateTimeOffset.UtcNow;
@@ -58,6 +63,11 @@ public class SupportTicket
     /// </summary>
     public void UpdatePriority(TicketPriority newPriority)
     {
+        if (newPriority == TicketPriority.Unknown)
+            throw new SupportDomainException(SupportDomainException.InvalidPriority);
+
+        if (newPriority == Priority) return;
+
         Priority = newPriority;
     }
 }

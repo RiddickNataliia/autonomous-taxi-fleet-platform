@@ -40,4 +40,6 @@ public record GpsLocation
     private GpsLocation() { }
 
     private static double ToRadians(double angle) => Math.PI * angle / 180.0;
+
+    public override string ToString() => $"({Latitude}, {Longitude})";
 }

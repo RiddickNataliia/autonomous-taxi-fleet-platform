@@ -13,34 +13,37 @@ public class DiscountCode
     private DiscountCode() { }
 
     /// <summary>
-    /// Checks if the discount code can be applied. 
-    /// Requirement: Current date < Expiration AND Fare >= MinimumValue.
+    /// Checks whether this code can be applied to the given fare.
+    /// The fare passed in must be the amount after loyalty discount has already been deducted.
     /// </summary>
-    public bool IsValid(decimal rideAmount)
+    /// <param name="fareBeforeCodeDiscount">The total fare amount after loyalty discount</param>
+    public bool IsValid(decimal fareBeforeCodeDiscount)
     {
         return IsActive && 
                DateTimeOffset.UtcNow <= ExpirationDate && 
-               rideAmount >= MinimumRideValue;
+               fareBeforeCodeDiscount >= MinimumRideValue;
     }
 
     /// <summary>
-    /// Logic for Rule: "Discount Codes" applied AFTER loyalty discount.
+    /// Calculates the discount amount to subtract from the fare.
+    /// Must only be called after the loyalty discount has been applied and IsValid() has returned true.
     /// </summary>
-    public decimal CalculateDiscount(decimal fareBeforeThisDiscount)
+    /// <param name="fareBeforeCodeDiscount">The total fare amount after loyalty discount</param>
+    public decimal CalculateDiscount(decimal fareBeforeCodeDiscount)
     {
-        if (!IsActive || DateTimeOffset.UtcNow > ExpirationDate)
-            return 0m;
-
-        if (fareBeforeThisDiscount < MinimumRideValue)
-            return 0m;
-
         return Type switch
         {
-            DiscountType.Percentage => Math.Round(fareBeforeThisDiscount * (Value / 100m), 2),
-            DiscountType.Flat       => Math.Min(Value, fareBeforeThisDiscount),
+            DiscountType.Percentage => Math.Round(fareBeforeCodeDiscount * (Value / 100m), 2),
+            DiscountType.Flat       => Math.Min(Value, fareBeforeCodeDiscount),
             _                       => 0m
         };
     }
-
-    public void Deactivate() => IsActive = false;
+    /// <summary>
+    /// Deactivates a discount code.
+    /// </summary>
+    public void Deactivate()
+    {
+        if (!IsActive) return;
+        IsActive = false;
+    }
 }

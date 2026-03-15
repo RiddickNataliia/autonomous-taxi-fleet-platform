@@ -15,9 +15,10 @@ public class Ride
     public decimal NetAmount { get; private set; }
     public decimal VatAmount { get; private set; }
     public decimal FinalPrice { get; private set; } 
-    public bool IsPaid { get; set; }
+    public bool IsPaid { get; private set; }
     public decimal LoyaltyDiscountApplied { get; private set; }
     public int LoyaltyPointsUsed { get; private set; }
+    public decimal CodeDiscountApplied { get; private set; }
 
     /// <summary>
     /// Initializes the ride by setting its status to Requested.
@@ -62,6 +63,7 @@ public class Ride
         FinalPrice = result.TotalGross;
         LoyaltyDiscountApplied = result.LoyaltyDiscountApplied;
         LoyaltyPointsUsed = result.PointsUsed;
+        CodeDiscountApplied = result.CodeDiscountApplied;
 
         Status = RideStatus.Completed;
     }
@@ -76,7 +78,17 @@ public class Ride
         if (Status == RideStatus.Completed)
             throw new RideDomainException(RideDomainException.AlreadyCompleted);
 
+        if (Status == RideStatus.Canceled) return;
+
         Status = RideStatus.Canceled;
+    }
+
+    public void MarkAsPaid()
+    {
+        if (Status != RideStatus.Completed)
+            throw new RideDomainException(RideDomainException.NotCompleted);
+
+        IsPaid = true;
     }
 
 }
