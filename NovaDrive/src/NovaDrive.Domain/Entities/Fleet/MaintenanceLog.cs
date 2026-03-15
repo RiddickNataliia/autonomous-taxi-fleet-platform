@@ -16,7 +16,7 @@ public class MaintenanceLog
     public static MaintenanceLog Create(Guid vehicleId, string description, string technician, decimal cost)
     {
         if (cost < 0) 
-            throw new MaintenanceDomainException("Maintenance cost cannot be negative.");
+            throw new MaintenanceDomainException(MaintenanceDomainException.NegativeCost);
 
         return new MaintenanceLog
         {

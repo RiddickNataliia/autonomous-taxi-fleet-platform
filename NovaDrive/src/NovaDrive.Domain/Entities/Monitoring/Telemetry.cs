@@ -12,4 +12,7 @@ public class Telemetry
     public double Speed { get; init; }
     public int BatteryPercentage { get; init; }
     public double InternalTemperature { get; init; }
+
+    private Telemetry() { }
 }
+

@@ -3,7 +3,7 @@ namespace NovaDrive.Domain.Entities;
 public class Vehicle
 {
     public Guid Id { get; init; } = Guid.NewGuid();
-    public Vin VIN { get; init; } = default!;
+    public required Vin VIN { get; init; }
     public int YearOfManufacture { get; init; }
     public required string LicensePlate { get; init; }
     public required string ModelName { get; set; }
@@ -14,6 +14,7 @@ public class Vehicle
     public BatteryLevel Battery { get; private set; }
     public VehicleStatus Status { get; private set; } = VehicleStatus.Inactive;
     public DateTimeOffset? LastInspectionDate { get; private set; }
+    public string? ApiKeyHash { get; private set; }
 
     private Vehicle() { }
 
@@ -24,10 +25,10 @@ public class Vehicle
     public void Activate() 
     {
         if (NeedsInspection())
-            throw new VehicleDomainException("Cannot activate a vehicle that is overdue for inspection.");
+            throw new VehicleDomainException(VehicleDomainException.InspectionRequired);
         
         if (!Battery.CanBeActivated)
-            throw new VehicleDomainException("Cannot activate vehicle with low battery (under 10%).");
+            throw new VehicleDomainException(VehicleDomainException.LowBattery);
 
         Status = VehicleStatus.Active;
     }
@@ -59,18 +60,33 @@ public class Vehicle
     }
 
     /// <summary>
+    /// Assigns a new API key to this vehicle.
+    /// The caller is responsible for passing an already-hashed value —
+    /// the domain never handles or stores raw keys.
+    /// </summary>
+    /// <param name="hashedKey">The BCrypt hash of the generated API key.</param>
+    public void SetApiKey(string hashedKey)
+    {
+        if (string.IsNullOrWhiteSpace(hashedKey))
+            throw new VehicleDomainException(VehicleDomainException.InvalidApiKey);
+
+        ApiKeyHash = hashedKey;
+    }
+
+    /// <summary>
     /// Keeps track of vehicle's locatoin, battery and status 
     /// </summary>
-    /// <param name="newLocation"></param>
-    /// <param name="newBattery"></param>
     public void UpdateVitals(GpsLocation newLocation, BatteryLevel newBattery)
     {
         CurrentLocation = newLocation;
         Battery = newBattery;
 
-        if (Battery.IsCritical && Status == VehicleStatus.Active)
+        if (Battery.IsCritical)
         {
-            Status = VehicleStatus.Inactive;
+            if (Status == VehicleStatus.EnRoute)
+                Status = VehicleStatus.Maintenance; // stranded mid-ride
+            else if (Status == VehicleStatus.Active)
+                Status = VehicleStatus.Inactive;
         }
     }
 }
