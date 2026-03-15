@@ -14,6 +14,7 @@ public class RideMatchingService
             .Where(v => !v.Battery.IsLow) 
 
             .OrderBy(v => passengerLocation.DistanceTo(v.CurrentLocation))
+            
             .FirstOrDefault();
     }
 

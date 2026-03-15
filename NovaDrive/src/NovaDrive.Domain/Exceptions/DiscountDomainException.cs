@@ -1,3 +1,4 @@
+namespace NovaDrive.Domain.Exceptions;
 public class DiscountDomainException : DomainException
 {
     public const string Expired = "This discount code has expired.";
