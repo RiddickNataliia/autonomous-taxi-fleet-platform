@@ -2,7 +2,7 @@ namespace NovaDrive.Domain.Entities;
 
 public class Vehicle
 {
-public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; init; } = Guid.NewGuid();
     public Vin VIN { get; init; } = default!;
     public int YearOfManufacture { get; init; }
     public required string LicensePlate { get; init; }

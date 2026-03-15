@@ -4,8 +4,9 @@ namespace NovaDrive.Domain.Services;
 /// A data transfer record that holds the result of the pricing calculation.
 /// </summary>
 public record PricingResult(
-    decimal NetAmount, 
-    decimal VatAmount, 
-    decimal TotalGross, 
-    decimal LoyaltyDiscountApplied, 
+    decimal NetAmount,
+    decimal VatAmount,
+    decimal TotalGross,
+    decimal LoyaltyDiscountApplied,
+    decimal CodeDiscountApplied,
     int PointsUsed);

@@ -17,13 +17,14 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<User>(entity =>
+        modelBuilder.Entity<Passenger>(entity =>
         {
-            entity.HasKey(u => u.Id);
-            entity.HasIndex(u => u.Email).IsUnique(); // Security: No duplicate accounts
-            
-            entity.Property(u => u.LoyaltyPoints)
-                .HasDefaultValue(0);
+            entity.HasKey(p => p.Id);
+
+            entity.HasOne(p => p.User)
+                .WithOne(u => u.PassengerProfile)
+                .HasForeignKey<Passenger>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // deleting a user deletes their passenger profile
         });
 
         modelBuilder.Entity<Ride>(entity =>

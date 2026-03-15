@@ -17,10 +17,4 @@ public class RideMatchingService
             
             .FirstOrDefault();
     }
-
-    // private double CalculateDistance(GpsLocation p1, GpsLocation p2)
-    // {
-    //     // Implementation of Haversine formula or simple Euclidean for now
-    //     return Math.Sqrt(Math.Pow(p1.Latitude - p2.Latitude, 2) + Math.Pow(p1.Longitude - p2.Longitude, 2));
-    // }
 }

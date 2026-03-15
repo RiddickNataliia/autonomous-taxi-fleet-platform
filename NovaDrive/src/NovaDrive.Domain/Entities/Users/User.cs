@@ -3,43 +3,42 @@ namespace NovaDrive.Domain.Entities;
 public class User
 {
     public Guid Id { get; init; } = Guid.NewGuid();
-    
+
     public required string Email { get; set; }
     public required string PasswordHash { get; set; }
     public UserRole Role { get; set; } = UserRole.Unknown;
-    
-    // Loyalty Program Requirements
-    public int LoyaltyPoints { get; private set; } // Protected from direct tampering
-    
+
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? LastLoginAt { get; set; }
 
+    // Navigation property — EF Core populates this on explicit Include()
+    // Null for admin and vehicle-system users who have no passenger profile
+    public Passenger? PassengerProfile { get; private set; }
 
+    // Private constructor for EF Core
     private User() { }
 
     /// <summary>
-    /// Adds points to the passenger's balance (e.g., after a successful payment).
+    /// Factory method for creating any user. Use Passenger.Create() for passenger accounts.
     /// </summary>
-    public void EarnPoints(int points)
+    public static User Create(string email, string passwordHash, UserRole role)
     {
-        if (points < 0) 
-            throw new UserDomainException(UserDomainException.NegativeEarn);
+        if (string.IsNullOrWhiteSpace(email))
+            throw new UserDomainException(UserDomainException.InvalidEmail);
 
-        LoyaltyPoints += points;
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new UserDomainException(UserDomainException.InvalidPassword);
+
+        return new User
+        {
+            Email = email,
+            PasswordHash = passwordHash,
+            Role = role
+        };
     }
 
-
-    /// <summary>
-    /// Deducts points used for a discount.
-    /// </summary>
-    public void DeductPoints(int points)
+    public void RecordLogin()
     {
-        if (points < 0) 
-            throw new UserDomainException(UserDomainException.NegativeDecuct);
-        
-        if (points > LoyaltyPoints)
-            throw new UserDomainException(UserDomainException.InsufficientPoints);
-
-        LoyaltyPoints -= points;
+        LastLoginAt = DateTimeOffset.UtcNow;
     }
 }

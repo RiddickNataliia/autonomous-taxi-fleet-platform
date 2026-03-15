@@ -60,8 +60,6 @@ public class Ride
         Status = RideStatus.Completed;
     }
     
-    // REMOVE SetFinalPrice(decimal amount) entirely! 
-    // The PricingEngine now owns the "Min 5 Euro" and "Rounding" logic.
 
     /// <summary>
     /// Cancels the ride if it hasn't been finished yet.
