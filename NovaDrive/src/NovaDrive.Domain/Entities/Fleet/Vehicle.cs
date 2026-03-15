@@ -3,7 +3,7 @@ namespace NovaDrive.Domain.Entities;
 public class Vehicle
 {
 public Guid Id { get; init; } = Guid.NewGuid();
-    public string VIN { get; init; } = string.Empty;
+    public Vin VIN { get; init; } = default!;
     public int YearOfManufacture { get; init; }
     public required string LicensePlate { get; init; }
     public required string ModelName { get; set; }
@@ -11,7 +11,7 @@ public Guid Id { get; init; } = Guid.NewGuid();
     
     //Vitals and status
     public GpsLocation CurrentLocation { get; private set; } = new(0, 0);
-    public int BatteryPercentage { get; private set; }
+    public BatteryLevel Battery { get; private set; }
     public VehicleStatus Status { get; private set; } = VehicleStatus.Inactive;
     public DateTimeOffset? LastInspectionDate { get; private set; }
 
@@ -26,7 +26,7 @@ public Guid Id { get; init; } = Guid.NewGuid();
         if (NeedsInspection())
             throw new VehicleDomainException("Cannot activate a vehicle that is overdue for inspection.");
         
-        if (BatteryPercentage < 10)
+        if (!Battery.CanBeActivated)
             throw new VehicleDomainException("Cannot activate vehicle with low battery (under 10%).");
 
         Status = VehicleStatus.Active;
@@ -63,24 +63,14 @@ public Guid Id { get; init; } = Guid.NewGuid();
     /// </summary>
     /// <param name="newLocation"></param>
     /// <param name="newBattery"></param>
-    public void UpdateVitals(GpsLocation newLocation, int newBattery)
+    public void UpdateVitals(GpsLocation newLocation, BatteryLevel newBattery)
     {
         CurrentLocation = newLocation;
-        BatteryPercentage = Math.Clamp(newBattery, 0, 100);
+        Battery = newBattery;
 
-        if (BatteryPercentage <= 0)
+        if (Battery.IsCritical && Status == VehicleStatus.Active)
         {
-            if (Status == VehicleStatus.EnRoute)
-            {
-                // This status tells the system: "Send help to this specific location!"
-                Status = VehicleStatus.Maintenance; 
-                
-                // could trigger a 'RideFailedEvent'nso the Dispatcher knows to send a second car for the passenger.
-            }
-            else if (Status == VehicleStatus.Active)
-            {
-                Status = VehicleStatus.Inactive;
-            }
+            Status = VehicleStatus.Inactive;
         }
     }
 }

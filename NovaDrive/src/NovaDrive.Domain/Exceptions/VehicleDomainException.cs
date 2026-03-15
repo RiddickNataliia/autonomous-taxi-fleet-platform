@@ -1,6 +1,6 @@
 namespace NovaDrive.Domain.Exceptions;
 
-public class VehicleDomainException : Exception
+public class VehicleDomainException : DomainException
 {
     public VehicleDomainException(string message) : base(message)
     {

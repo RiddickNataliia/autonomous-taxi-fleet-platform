@@ -1,4 +1,4 @@
-public class DiscountDomainException : Exception
+public class DiscountDomainException : DomainException
 {
     public const string Expired = "This discount code has expired.";
     public const string BelowMinimum = "The ride value is too low for this discount.";

@@ -1,6 +1,6 @@
 namespace NovaDrive.Domain.Exceptions;
 
-public class SupportDomainException : Exception
+public class SupportDomainException : DomainException
 {
     public const string NotOpen = "Only open tickets can be started.";
     public const string AlreadyResolved = "This ticket is already resolved.";

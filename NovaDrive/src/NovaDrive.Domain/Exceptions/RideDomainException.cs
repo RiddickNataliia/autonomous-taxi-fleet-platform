@@ -1,6 +1,6 @@
 namespace NovaDrive.Domain.Exceptions;
 
-public class RideDomainException : Exception
+public class RideDomainException : DomainException
 {
     public const string AlreadyInitialized = "Ride has already been initialized.";
     public const string NotRequested = "Only requested rides can be started.";

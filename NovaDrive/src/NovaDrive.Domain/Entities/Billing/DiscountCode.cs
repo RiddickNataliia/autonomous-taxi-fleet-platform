@@ -5,16 +5,16 @@ public class DiscountCode
     public Guid Id { get; init; } = Guid.NewGuid();
     public required string Code { get; init; } 
     public DiscountType Type { get; init; } = DiscountType.Unknown;
-    public decimal Value { get; init; }
+    public decimal Value { get; init; } // 15 for 15% or 5 for €5.00
     public DateTimeOffset ExpirationDate { get; init; }
     public decimal MinimumRideValue { get; init; }
     public bool IsActive { get; private set; } = true;
 
-
     private DiscountCode() { }
 
     /// <summary>
-    /// Checks if the discount code can be applied to a specific ride amount.
+    /// Checks if the discount code can be applied. 
+    /// Requirement: Current date < Expiration AND Fare >= MinimumValue.
     /// </summary>
     public bool IsValid(decimal rideAmount)
     {
@@ -24,21 +24,20 @@ public class DiscountCode
     }
 
     /// <summary>
-    /// Calculates the savings based on the ride amount.
+    /// Logic for Rule: "Discount Codes" applied AFTER loyalty discount.
     /// </summary>
     public decimal CalculateDiscount(decimal currentFare)
     {
-        // The requirement says: "gives a 15% discount on the REMAINING amount"
-        // So we pass the fare AFTER loyalty discount into this method.
-        
+        if (!IsValid(currentFare)) return 0m;
+
         if (Type == DiscountType.Percentage)
             return Math.Round(currentFare * (Value / 100m), 2);
 
-        return Math.Min(Value, currentFare);
+        if (Type == DiscountType.Flat)
+            return Math.Min(Value, currentFare); // Ensure we don't discount more than the fare
+
+        return 0m;
     }
 
-    /// <summary>
-    /// Deactivate a discount code.
-    /// </summary>
     public void Deactivate() => IsActive = false;
 }
