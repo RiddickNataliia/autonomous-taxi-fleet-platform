@@ -26,17 +26,20 @@ public class DiscountCode
     /// <summary>
     /// Logic for Rule: "Discount Codes" applied AFTER loyalty discount.
     /// </summary>
-    public decimal CalculateDiscount(decimal currentFare)
+    public decimal CalculateDiscount(decimal fareBeforeThisDiscount)
     {
-        if (!IsValid(currentFare)) return 0m;
+        if (!IsActive || DateTimeOffset.UtcNow > ExpirationDate)
+            return 0m;
 
-        if (Type == DiscountType.Percentage)
-            return Math.Round(currentFare * (Value / 100m), 2);
+        if (fareBeforeThisDiscount < MinimumRideValue)
+            return 0m;
 
-        if (Type == DiscountType.Flat)
-            return Math.Min(Value, currentFare); // Ensure we don't discount more than the fare
-
-        return 0m;
+        return Type switch
+        {
+            DiscountType.Percentage => Math.Round(fareBeforeThisDiscount * (Value / 100m), 2),
+            DiscountType.Flat       => Math.Min(Value, fareBeforeThisDiscount),
+            _                       => 0m
+        };
     }
 
     public void Deactivate() => IsActive = false;

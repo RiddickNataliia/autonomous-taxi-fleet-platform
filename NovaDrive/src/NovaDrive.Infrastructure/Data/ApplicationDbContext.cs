@@ -10,8 +10,12 @@ public class ApplicationDbContext : DbContext
     }
 
     // Register your Postgres entities here
-    public DbSet<Ride> Rides { get; set; }
-    public DbSet<User> Users { get; set; }
+    public DbSet<Passenger>         Passengers        { get; set; }
+    public DbSet<Vehicle>           Vehicles          { get; set; }
+    public DbSet<MaintenanceLog>    MaintenanceLogs   { get; set; }
+    public DbSet<Transaction>       Transactions      { get; set; }
+    public DbSet<SupportTicket>     SupportTickets    { get; set; }
+    public DbSet<DiscountCode>      DiscountCodes     { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -66,6 +70,28 @@ public class ApplicationDbContext : DbContext
             entity.Property(v => v.Type)
                 .HasConversion<string>();
         });
+
+        modelBuilder.Entity<Vehicle>(entity =>
+        {
+            entity.Property(v => v.VIN)
+                .HasConversion(
+                    vin => vin.Value,           // to DB: store the string
+                    value => new Vin(value))    // from DB: reconstruct the value object
+                .HasMaxLength(17)
+                .IsRequired();
+
+            // GpsLocation as owned entity (two columns: CurrentLocation_Latitude, CurrentLocation_Longitude)
+            entity.OwnsOne(v => v.CurrentLocation, gps =>
+            {
+                gps.Property(g => g.Latitude).HasColumnName("LocationLatitude");
+                gps.Property(g => g.Longitude).HasColumnName("LocationLongitude");
+            });
+
+            // BatteryLevel as owned entity
+            entity.OwnsOne(v => v.Battery, battery =>
+            {
+                battery.Property(b => b.Percentage).HasColumnName("BatteryPercentage");
+            });
 
         modelBuilder.Entity<Transaction>(entity =>
         {

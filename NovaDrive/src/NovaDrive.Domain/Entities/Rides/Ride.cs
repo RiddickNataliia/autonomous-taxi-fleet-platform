@@ -7,8 +7,11 @@ public class Ride
     public required Guid VehicleId { get; set; }
     public string Departure { get; set; } = string.Empty;
     public string Destination { get; set; } = string.Empty;
+    public double DistanceKm { get; private set; }
+    public int DurationMinutes { get; private set; }
     public RideStatus Status { get; private set; } = RideStatus.Unknown;
     public DateTimeOffset RequestTime { get; init; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? CompletedTime { get; private set; }
     public decimal NetAmount { get; private set; }
     public decimal VatAmount { get; private set; }
     public decimal FinalPrice { get; private set; } 
@@ -45,12 +48,15 @@ public class Ride
     /// </summary>
     /// <param name="result">The calculated pricing breakdown from the PricingEngine.</param>
     /// <exception cref="RideDomainException">Thrown if the ride is not currently EnRoute.</exception>
-    public void CompleteRide(PricingResult result)
+    public void CompleteRide(PricingResult result, double distanceKm, int durationMinutes)
     {
         if (Status != RideStatus.EnRoute)
             throw new RideDomainException(RideDomainException.NotEnRoute);
 
-        // Map the rich data from our Domain Service
+        DistanceKm = distanceKm;
+        DurationMinutes = durationMinutes;
+        CompletedTime = DateTimeOffset.UtcNow;
+
         NetAmount = result.NetAmount;
         VatAmount = result.VatAmount;
         FinalPrice = result.TotalGross;

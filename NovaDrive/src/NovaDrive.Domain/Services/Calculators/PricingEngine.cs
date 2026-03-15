@@ -50,7 +50,7 @@ public class PricingEngine
 
         // STEP 5: Discount code — applied to remaining amount after loyalty
         decimal codeDiscount = 0m;
-        if (code != null && code.IsValid(currentFare))
+        if (code is not null)
         {
             codeDiscount = code.CalculateDiscount(currentFare);
             currentFare -= codeDiscount;
