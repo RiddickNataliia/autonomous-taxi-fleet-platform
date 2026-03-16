@@ -27,6 +27,9 @@ public class Passenger
         if (string.IsNullOrWhiteSpace(fullName))
             throw new UserDomainException(UserDomainException.InvalidFullName);
 
+        if (string.IsNullOrWhiteSpace(homeAddress))
+            throw new UserDomainException(UserDomainException.InvalidHomeAddress);
+
         return new Passenger
         {
             UserId = userId,
@@ -43,6 +46,12 @@ public class Passenger
         if (string.IsNullOrWhiteSpace(fullName))
             throw new UserDomainException(UserDomainException.InvalidFullName);
 
+        if (string.IsNullOrWhiteSpace(homeAddress))
+            throw new UserDomainException(UserDomainException.InvalidHomeAddress);
+
+        if (paymentMethod == PaymentMethod.Unknown)
+            throw new UserDomainException(UserDomainException.InvalidPaymentMethod);
+
         FullName = fullName;
         HomeAddress = homeAddress;
         PreferredPaymentMethod = paymentMethod;
@@ -56,6 +65,8 @@ public class Passenger
         if (points < 0)
             throw new UserDomainException(UserDomainException.NegativeEarn);
 
+        if (points == 0) return;
+
         LoyaltyPoints += points;
     }
 
@@ -67,6 +78,8 @@ public class Passenger
     {
         if (points < 0)
             throw new UserDomainException(UserDomainException.NegativeDeduct);
+
+        if (points == 0) return;
 
         if (points > LoyaltyPoints)
             throw new UserDomainException(UserDomainException.InsufficientPoints);

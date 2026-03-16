@@ -9,6 +9,9 @@ public class UserDomainException : Exception
     public const string InvalidPassword = "A password hash is required.";
     public const string InvalidFullName = "A full name is required.";
     public const string InvalidUserId = "A valid user ID is required to create a passenger profile.";
+    public const string InvalidRole = "A valid role must be assigned to a user.";
+    public const string InvalidHomeAddress = "A valid home address is required.";
+    public const string InvalidPaymentMethod = "A valid payment method is required.";
 
     public UserDomainException(string message) : base(message) { }
 }

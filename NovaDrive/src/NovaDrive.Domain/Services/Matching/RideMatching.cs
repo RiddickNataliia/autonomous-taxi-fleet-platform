@@ -1,20 +1,18 @@
-namespace NovaDrive.Domain.Services;
-
 public class RideMatchingService
 {
+    private const double MaxMatchDistanceKm = 40.0;
+
     /// <summary>
-    /// Logic to find the best vehicle.
-    /// Requirements: Active, nearest, and sufficient battery
+    /// Finds the nearest available vehicle within the maximum match distance.
+    /// Returns null if no suitable vehicle is found within range.
     /// </summary>
     public Vehicle? FindBestMatch(GpsLocation passengerLocation, IEnumerable<Vehicle> availableVehicles)
     {
         return availableVehicles
             .Where(v => v.Status == VehicleStatus.Active)
-            // Rule: Only cars with enough juice to actually finish a trip
-            .Where(v => !v.Battery.IsLow) 
-
+            .Where(v => !v.Battery.IsLow)
+            .Where(v => passengerLocation.DistanceTo(v.CurrentLocation) <= MaxMatchDistanceKm)
             .OrderBy(v => passengerLocation.DistanceTo(v.CurrentLocation))
-            
             .FirstOrDefault();
     }
 }

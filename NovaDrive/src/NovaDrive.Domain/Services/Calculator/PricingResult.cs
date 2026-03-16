@@ -1,4 +1,4 @@
-namespace NovaDrive.Domain.Services;
+namespace NovaDrive.Domain.ValueObjects;
 
 /// <summary>
 /// A data transfer record that holds the result of the pricing calculation.

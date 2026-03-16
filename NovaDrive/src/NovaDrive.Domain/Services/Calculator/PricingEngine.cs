@@ -12,6 +12,23 @@ public class PricingEngine
     private const decimal LoyaltyCapPercent = 0.20m;
     private const decimal PointsPerEuro = 100m;
 
+    /// <summary>
+    /// Calculates loyalty points earned from a completed ride.
+    /// Rate: €1 spent = 10 points. Fractional points are truncated.
+    /// </summary>
+    /// <param name="totalGross">The total amount charged including VAT.</param>
+    public int CalculateEarnedPoints(decimal totalGross)
+    {
+        // if (totalGross <= 0) return 0;
+
+        return (int)(totalGross * 10);
+    }
+    
+    /// <summary>
+    /// Calculates the full fare breakdown for a ride including multipliers,
+    /// surcharges, discounts, and VAT. Applies rules in this exact order:
+    /// base fare → vehicle multiplier → night surcharge → loyalty discount → promo code → minimum fare → VAT.
+    /// </summary>
     public PricingResult CalculateFinalPrice(
         double distanceKm,
         int durationMinutes,
@@ -56,7 +73,7 @@ public class PricingEngine
             currentFare -= codeDiscount;
         }
 
-        // STEP 6: Hard business rules — no negatives, minimum fare
+        // STEP 6: no negatives, minimum fare
         currentFare = Math.Max(0m, currentFare);
         decimal netAmount = Math.Max(MinimumFare, Math.Round(currentFare, 2));
 

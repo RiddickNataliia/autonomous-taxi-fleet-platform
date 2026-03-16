@@ -11,7 +11,7 @@ public class User
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? LastLoginAt { get; set; }
 
-    // Navigation property — EF Core populates this on explicit Include()
+    // Navigation property
     // Null for admin and vehicle-system users who have no passenger profile
     public Passenger? PassengerProfile { get; private set; }
 
@@ -28,6 +28,9 @@ public class User
 
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new UserDomainException(UserDomainException.InvalidPassword);
+
+        if (role == UserRole.Unknown)
+            throw new UserDomainException(UserDomainException.InvalidRole);
 
         return new User
         {
