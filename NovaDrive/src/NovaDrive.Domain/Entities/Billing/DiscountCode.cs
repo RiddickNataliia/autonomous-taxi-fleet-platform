@@ -3,14 +3,26 @@ namespace NovaDrive.Domain.Entities;
 public class DiscountCode
 {
     public Guid Id { get; init; } = Guid.NewGuid();
-    public required string Code { get; init; } 
+    public string Code { get; init; } = string.Empty;
     public DiscountType Type { get; init; } = DiscountType.Unknown;
     public decimal Value { get; init; } // 15 for 15% or 5 for €5.00
     public DateTimeOffset ExpirationDate { get; init; }
     public decimal MinimumRideValue { get; init; }
     public bool IsActive { get; private set; } = true;
 
+    //private to enforce creation through the factory method with validation
     private DiscountCode() { }
+
+    //for testing purposes only - allows setting all properties including those with private setters
+    internal DiscountCode(string code, DiscountType type, decimal value, decimal minimumRideValue, DateTimeOffset expirationDate, bool isActive = true)
+    {
+        Code = code;
+        Type = type;
+        Value = value;
+        MinimumRideValue = minimumRideValue;
+        ExpirationDate = expirationDate;
+        IsActive = isActive;
+    }
 
     /// <summary>
     /// Checks whether this code can be applied to the given fare.
@@ -33,11 +45,12 @@ public class DiscountCode
     {
         return Type switch
         {
-            DiscountType.Percentage => Math.Round(fareBeforeCodeDiscount * (Value / 100m), 2),
+            DiscountType.Percentage => Math.Round(fareBeforeCodeDiscount * (Value / 100m), 2, MidpointRounding.AwayFromZero),
             DiscountType.Flat       => Math.Min(Value, fareBeforeCodeDiscount),
             _                       => 0m
         };
     }
+
     /// <summary>
     /// Deactivates a discount code.
     /// </summary>
@@ -45,5 +58,34 @@ public class DiscountCode
     {
         if (!IsActive) return;
         IsActive = false;
+    }
+
+
+    /// <summary>
+    /// Factory method to create a new discount code with validation. Throws exceptions if any parameters are invalid.
+    /// </summary>
+    /// <exception cref="DiscountDomainException"></exception>
+    public static DiscountCode Create(string code, DiscountType type, decimal value, decimal minimumRideValue, DateTimeOffset expirationDate)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            throw new DiscountDomainException(DiscountDomainException.InvalidCode);
+
+        if (type == DiscountType.Unknown)
+            throw new DiscountDomainException(DiscountDomainException.InvalidType);
+
+        if (value <= 0)
+            throw new DiscountDomainException(DiscountDomainException.InvalidValue);
+
+        if (expirationDate <= DateTimeOffset.UtcNow)
+            throw new DiscountDomainException(DiscountDomainException.AlreadyExpired);
+
+        return new DiscountCode
+        {
+            Code = code,
+            Type = type,
+            Value = value,
+            MinimumRideValue = minimumRideValue,
+            ExpirationDate = expirationDate
+        };
     }
 }

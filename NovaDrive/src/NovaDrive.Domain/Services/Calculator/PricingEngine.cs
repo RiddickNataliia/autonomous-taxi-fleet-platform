@@ -61,13 +61,13 @@ public class PricingEngine
         decimal potentialLoyaltyDiscount = Math.Floor(availablePoints / PointsPerEuro) * 1.00m;
         decimal loyaltyCap = currentFare * LoyaltyCapPercent;
         decimal actualLoyaltyDiscount = Math.Min(potentialLoyaltyDiscount, loyaltyCap);
-        int pointsSpent = (int)(Math.Floor(actualLoyaltyDiscount) * PointsPerEuro);
+        int pointsSpent = (int)(actualLoyaltyDiscount * PointsPerEuro);
 
         currentFare -= actualLoyaltyDiscount;
 
         // STEP 5: Discount code — applied to remaining amount after loyalty
         decimal codeDiscount = 0m;
-        if (code is not null)
+        if (code is not null && code.IsValid(currentFare))
         {
             codeDiscount = code.CalculateDiscount(currentFare);
             currentFare -= codeDiscount;
@@ -75,10 +75,10 @@ public class PricingEngine
 
         // STEP 6: no negatives, minimum fare
         currentFare = Math.Max(0m, currentFare);
-        decimal netAmount = Math.Max(MinimumFare, Math.Round(currentFare, 2));
+        decimal netAmount = Math.Max(MinimumFare, Math.Round(currentFare, 2, MidpointRounding.AwayFromZero));
 
         // STEP 7: VAT on top of the net amount
-        decimal vatAmount = Math.Round(netAmount * VatRate, 2);
+        decimal vatAmount = Math.Round(netAmount * VatRate, 2, MidpointRounding.AwayFromZero);
         decimal totalGross = netAmount + vatAmount;
 
         return new PricingResult(

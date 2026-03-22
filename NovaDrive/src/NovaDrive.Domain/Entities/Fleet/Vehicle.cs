@@ -13,7 +13,7 @@ public class Vehicle
     
     //Vitals and status
     public GpsLocation CurrentLocation { get; private set; } = new(0, 0);
-    public BatteryLevel Battery { get; private set; }
+    public BatteryLevel Battery { get; private set; } = new(100);
     public VehicleStatus Status { get; private set; } = VehicleStatus.Inactive;
     public DateTimeOffset? LastInspectionDate { get; private set; }
     public string? ApiKeyHash { get; private set; }
