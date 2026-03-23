@@ -5,6 +5,7 @@ public class Transaction
     public Guid Id { get; init; } = Guid.NewGuid();
     public required Guid RideId { get; init; } 
     public decimal Amount { get; init; } 
+    public PaymentMethod PaymentMethod { get; init; } = PaymentMethod.Unknown; 
     public Currency Currency { get; init; } = Currency.EUR;
 
     public TransactionStatus Status { get; private set; } = TransactionStatus.Pending;
