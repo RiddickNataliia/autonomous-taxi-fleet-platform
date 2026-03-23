@@ -1,14 +1,12 @@
-using System.Reflection.Metadata.Ecma335;
-
 namespace NovaDrive.Domain.Entities;
 
 public class Vehicle
 {
     public Guid Id { get; init; } = Guid.NewGuid();
-    public required Vin VIN { get; init; }
+    public Vin VIN { get; init; } = default!;
     public int YearOfManufacture { get; init; }
-    public required string LicensePlate { get; init; }
-    public required string ModelName { get; set; }
+    public string LicensePlate { get; init; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
     public VehicleType Type { get; set; } = VehicleType.Unknown;
     
     //Vitals and status
@@ -19,6 +17,17 @@ public class Vehicle
     public string? ApiKeyHash { get; private set; }
 
     private Vehicle() { }
+
+    //for testing to enforce creation though the factory method with validation.
+    //allows setting all properties including those with private setters
+    internal Vehicle(string licensePlate, string modelName, Vin vin, int yearOfManufacture = 2023, VehicleType type = VehicleType.Standard)
+    {
+        LicensePlate      = licensePlate;
+        ModelName         = modelName;
+        VIN               = vin;
+        YearOfManufacture = yearOfManufacture;
+        Type              = type;
+    }
 
     /// <summary>
     /// Activates the vehicle for use in the fleet.
@@ -107,4 +116,5 @@ public class Vehicle
                 Status = VehicleStatus.Inactive;
         }
     }
+
 }
