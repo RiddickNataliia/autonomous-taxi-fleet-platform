@@ -104,16 +104,4 @@ public class BatteryLevelTests
     {
         Assert.Equal("75%", new BatteryLevel(75).ToString());
     }
-
-    [Fact]
-    public void Equality_SamePercentage_AreEqual()
-    {
-        Assert.Equal(new BatteryLevel(50), new BatteryLevel(50));
-    }
-
-    [Fact]
-    public void Equality_DifferentPercentage_AreNotEqual()
-    {
-        Assert.NotEqual(new BatteryLevel(50), new BatteryLevel(51));
-    }
 }

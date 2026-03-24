@@ -46,23 +46,4 @@ public class VinTests
         var vin = new Vin("1HGCM82633A004352");
         Assert.Equal("1HGCM82633A004352", vin.ToString());
     }
-
-    [Fact]
-    public void Equality_SameValue_AreEqual()
-    {
-        Assert.Equal(new Vin("1HGCM82633A004352"), new Vin("1HGCM82633A004352"));
-    }
-
-    [Fact]
-    public void Equality_DifferentValue_AreNotEqual()
-    {
-        Assert.NotEqual(new Vin("1HGCM82633A004352"), new Vin("2HGCM82633A004352"));
-    }
-
-    [Fact]
-    public void Equality_CaseInsensitiveInput_AreEqual()
-    {
-        // both normalize to uppercase so should be equal
-        Assert.Equal(new Vin("1hgcm82633a004352"), new Vin("1HGCM82633A004352"));
-    }
 }

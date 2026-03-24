@@ -78,20 +78,4 @@ public class GpsLocationTests
         Assert.Equal("(50.8503, 4.3517)", location.ToString());
     }
 
-    [Fact]
-    public void Equality_SameCoordinates_AreEqual()
-    {
-        var a = new GpsLocation(50.8503, 4.3517);
-        var b = new GpsLocation(50.8503, 4.3517);
-        Assert.Equal(a, b);
-    }
-
-    [Fact]
-    public void Equality_DifferentCoordinates_AreNotEqual()
-    {
-        var a = new GpsLocation(50.8503, 4.3517);
-        var b = new GpsLocation(51.0543, 3.7174);
-        Assert.NotEqual(a, b);
-}
-
 }

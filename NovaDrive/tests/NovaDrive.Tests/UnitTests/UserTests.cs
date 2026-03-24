@@ -57,7 +57,7 @@ public class UserTests
         user.RecordLogin();
         var firstLogin = user.LastLoginAt;
 
-        System.Threading.Thread.Sleep(10);
+        Thread.Sleep(10);
         user.RecordLogin();
 
         Assert.True(user.LastLoginAt > firstLogin);
