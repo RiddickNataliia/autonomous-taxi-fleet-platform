@@ -2,17 +2,33 @@ namespace NovaDrive.Tests.UnitTests;
 
 public class SupportTicketTests
 {
-
     [Fact]
     public void Create_SetsInitialValues()
     {
-        var ticket = SupportTicket.Create(Guid.NewGuid(), "Issue with ride", "The driver was late", TicketPriority.Medium);
+        var passengerId = Guid.NewGuid();
+        var before = DateTimeOffset.UtcNow;
 
+        var ticket = SupportTicket.Create(passengerId, "Issue with ride", "The driver was late", TicketPriority.Medium);
+
+        Assert.Equal(passengerId, ticket.PassengerId);
         Assert.Equal(TicketStatus.Open, ticket.Status);
         Assert.Equal("Issue with ride", ticket.Subject);
         Assert.Equal("The driver was late", ticket.Description);
         Assert.Equal(TicketPriority.Medium, ticket.Priority);
+        Assert.Null(ticket.ResolvedAt);
+        Assert.True(ticket.CreatedAt >= before);
     }
+
+    // [Fact]
+    // public void Create_SetsInitialValues()
+    // {
+    //     var ticket = SupportTicket.Create(Guid.NewGuid(), "Issue with ride", "The driver was late", TicketPriority.Medium);
+
+    //     Assert.Equal(TicketStatus.Open, ticket.Status);
+    //     Assert.Equal("Issue with ride", ticket.Subject);
+    //     Assert.Equal("The driver was late", ticket.Description);
+    //     Assert.Equal(TicketPriority.Medium, ticket.Priority);
+    // }
 
     [Fact]
     public void Create_WithEmptySubject_Throws()
@@ -63,6 +79,26 @@ public class SupportTicketTests
     {
         var ticket = SupportTicket.Create(Guid.NewGuid(), "Issue", "Description", TicketPriority.Low);
         // Still Open, not InProgress
+
+        var ex = Assert.Throws<SupportDomainException>(() => ticket.Resolve());
+        Assert.Equal(SupportDomainException.NotInProgress, ex.Message);
+    }
+
+    [Fact]
+    public void Resolve_FromOpen_Throws()
+    {
+        var ticket = SupportTicket.Create(Guid.NewGuid(), "Issue", "Description", TicketPriority.Low);
+
+        var ex = Assert.Throws<SupportDomainException>(() => ticket.Resolve());
+        Assert.Equal(SupportDomainException.NotInProgress, ex.Message);
+    }
+
+    [Fact]
+    public void Resolve_WhenAlreadyResolved_Throws()
+    {
+        var ticket = SupportTicket.Create(Guid.NewGuid(), "Issue", "Description", TicketPriority.Low);
+        ticket.StartWork();
+        ticket.Resolve();
 
         var ex = Assert.Throws<SupportDomainException>(() => ticket.Resolve());
         Assert.Equal(SupportDomainException.NotInProgress, ex.Message);

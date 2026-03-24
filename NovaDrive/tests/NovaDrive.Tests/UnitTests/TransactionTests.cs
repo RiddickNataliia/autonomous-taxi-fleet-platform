@@ -18,6 +18,13 @@ public class TransactionTests
     }
 
     [Fact]
+    public void NewTransaction_HasNullBankReference()
+    {
+        var transaction = CreateTransaction();
+        Assert.Null(transaction.BankReference);
+    }
+
+    [Fact]
     public void MarkAsSuccessful_WithValidReferenceAndPendingStatus_SetsStatusToSuccessful()
     {
         var transaction = CreateTransaction();
@@ -67,5 +74,15 @@ public class TransactionTests
         
         var ex = Assert.Throws<TransactionDomainException>(() => transaction.MarkAsFailed());
         Assert.Equal(TransactionDomainException.CannotFail, ex.Message);
+    }
+
+    [Fact]
+    public void MarkAsSuccessful_WhenAlreadyFailed_Throws()
+    {
+        var transaction = CreateTransaction();
+        transaction.MarkAsFailed();
+
+        var ex = Assert.Throws<TransactionDomainException>(() => transaction.MarkAsSuccessful(transactionReference));
+        Assert.Equal(TransactionDomainException.NotPending, ex.Message);
     }
 }

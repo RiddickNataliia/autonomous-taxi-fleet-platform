@@ -20,14 +20,19 @@ public class Vehicle
 
     //for testing to enforce creation though the factory method with validation.
     //allows setting all properties including those with private setters
-    internal Vehicle(string licensePlate, string modelName, Vin vin, int yearOfManufacture = 2023, VehicleType type = VehicleType.Standard)
+    internal Vehicle(string licensePlate, string modelName, Vin vin, int yearOfManufacture = 2023, VehicleType type = VehicleType.Standard, VehicleStatus status = VehicleStatus.Inactive, GpsLocation? currentLocation = null, BatteryLevel? battery = null)
     {
         LicensePlate      = licensePlate;
         ModelName         = modelName;
         VIN               = vin;
         YearOfManufacture = yearOfManufacture;
         Type              = type;
+        Status            = status;
+        CurrentLocation   = currentLocation ?? new GpsLocation(0, 0);
+        Battery           = battery ?? new BatteryLevel(100);
     }
+
+
 
     /// <summary>
     /// Activates the vehicle for use in the fleet.
