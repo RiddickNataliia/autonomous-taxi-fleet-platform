@@ -9,6 +9,7 @@ public class ApplicationDbContext : DbContext
         public DbSet<User>            Users            { get; set; }
         public DbSet<Passenger>       Passengers       { get; set; }
         public DbSet<Vehicle>         Vehicles         { get; set; }
+        public DbSet<VehicleApiKey>   VehicleApiKeys   { get; set; }
         public DbSet<Ride>            Rides            { get; set; }
         public DbSet<Transaction>     Transactions     { get; set; }
         public DbSet<MaintenanceLog>  MaintenanceLogs  { get; set; }
@@ -35,13 +36,11 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(r => r.Id);
             entity.Property(r => r.NetAmount).HasPrecision(18, 2);
             entity.Property(r => r.VatAmount).HasPrecision(18, 2);
-            entity.Property(r => r.FinalPrice).HasPrecision(18, 2);
+            entity.Property(r => r.FinalPrice).HasPrecision(18, 2).IsRequired();
             entity.Property(r => r.LoyaltyDiscountApplied).HasPrecision(18, 2);
+            entity.Property(r => r.CodeDiscountApplied).HasPrecision(18, 2);
             entity.Property(r => r.Status)
                 .HasConversion<string>() 
-                .IsRequired();
-            entity.Property(r => r.FinalPrice)
-                .HasPrecision(18, 2)
                 .IsRequired();
             entity.HasOne<User>()
                 .WithMany()
@@ -75,6 +74,25 @@ public class ApplicationDbContext : DbContext
                 });
             });
 
+            modelBuilder.Entity<VehicleApiKey>(entity =>
+            {
+                entity.HasKey(k => k.Id);
+                entity.Property(k => k.KeyHash)
+                    .HasMaxLength(60)   // BCrypt hashes are always exactly 60 chars
+                    .IsRequired();
+                entity.Property(k => k.Label)
+                    .HasMaxLength(200);
+
+                // for fast lookup of "the active key for vehicle X"
+                entity.HasIndex(k => new { k.VehicleId, k.IsActive });
+
+                entity.HasOne<Vehicle>()
+                    .WithMany()
+                    .HasForeignKey(k => k.VehicleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
             modelBuilder.Entity<Transaction>(entity =>
             {
                 entity.HasKey(t => t.Id);
@@ -98,6 +116,12 @@ public class ApplicationDbContext : DbContext
                 entity.HasKey(m => m.Id);
                 entity.Property(m => m.Cost)
                     .HasPrecision(18, 2);
+                entity.Property(m => m.Description)
+                    .HasMaxLength(500)
+                    .IsRequired();
+                entity.Property(m => m.TechnitianName)
+                    .HasMaxLength(100)
+                    .IsRequired();
                 entity.HasOne<Vehicle>()
                     .WithMany()
                     .HasForeignKey(m => m.VehicleId)
@@ -119,7 +143,10 @@ public class ApplicationDbContext : DbContext
 
             modelBuilder.Entity<DiscountCode>(entity =>
             {
-                entity.HasIndex(d => d.Code).IsUnique();
+                entity.HasIndex(d => d.Code)
+                    .IsUnique()
+                    .HasMaxLength(50)
+                    .IsRequired();
                 entity.Property(d => d.Value)
                     .HasPrecision(18, 2);
                 entity.Property(d => d.MinimumRideValue)
