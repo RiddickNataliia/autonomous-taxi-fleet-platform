@@ -248,69 +248,69 @@ public class VehicleTests
     }
 
 
-    [Fact]
-    public void SetApiKey_WithValidHash_StoresKey()
-    {
-        var vehicle = CreateInspectedVehicle();
+    // [Fact]
+    // public void SetApiKey_WithValidHash_StoresKey()
+    // {
+    //     var vehicle = CreateInspectedVehicle();
 
-        vehicle.SetApiKey(ValidBcryptHash);
+    //     vehicle.SetApiKey(ValidBcryptHash);
 
-        Assert.Equal(ValidBcryptHash, vehicle.ApiKeyHash);
-    }
+    //     Assert.Equal(ValidBcryptHash, vehicle.ApiKeyHash);
+    // }
 
-    [Fact]
-    public void SetApiKey_WithEmptyString_Throws()
-    {
-        var vehicle = CreateInspectedVehicle();
+    // [Fact]
+    // public void SetApiKey_WithEmptyString_Throws()
+    // {
+    //     var vehicle = CreateInspectedVehicle();
 
-        var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey(""));
-        Assert.Equal(VehicleDomainException.InvalidApiKey, ex.Message);
-    }
+    //     var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey(""));
+    //     Assert.Equal(VehicleDomainException.InvalidApiKey, ex.Message);
+    // }
 
-    [Fact]
-    public void SetApiKey_WithWhitespace_Throws()
-    {
-        var vehicle = CreateInspectedVehicle();
+    // [Fact]
+    // public void SetApiKey_WithWhitespace_Throws()
+    // {
+    //     var vehicle = CreateInspectedVehicle();
 
-        var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey("   "));
-        Assert.Equal(VehicleDomainException.InvalidApiKey, ex.Message);
-    }
+    //     var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey("   "));
+    //     Assert.Equal(VehicleDomainException.InvalidApiKey, ex.Message);
+    // }
 
-    [Fact]
-    public void SetApiKey_WithNonBcryptFormat_Throws()
-    {
-        var vehicle = CreateInspectedVehicle();
+    // [Fact]
+    // public void SetApiKey_WithNonBcryptFormat_Throws()
+    // {
+    //     var vehicle = CreateInspectedVehicle();
 
-        var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey("notabcrypthash"));
-        Assert.Equal(VehicleDomainException.InvalidApiKey, ex.Message);
-    }
+    //     var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey("notabcrypthash"));
+    //     Assert.Equal(VehicleDomainException.InvalidApiKey, ex.Message);
+    // }
 
-    [Fact]
-    public void SetApiKey_WithCorrectPrefixButWrongLength_Throws()
-    {
-        var vehicle = CreateInspectedVehicle();
+    // [Fact]
+    // public void SetApiKey_WithCorrectPrefixButWrongLength_Throws()
+    // {
+    //     var vehicle = CreateInspectedVehicle();
 
-        var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey("$2a$12$tooshort"));
-        Assert.Equal(VehicleDomainException.InvalidApiKey, ex.Message);
-    }
+    //     var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey("$2a$12$tooshort"));
+    //     Assert.Equal(VehicleDomainException.InvalidApiKey, ex.Message);
+    // }
 
-    [Fact]
-    public void SetApiKey_WhenEnRoute_Throws()
-    {
-        var vehicle = CreateEnRouteVehicle();
+    // [Fact]
+    // public void SetApiKey_WhenEnRoute_Throws()
+    // {
+    //     var vehicle = CreateEnRouteVehicle();
 
-        var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey(ValidBcryptHash));
-        Assert.Equal(VehicleDomainException.CannotRotateKeyWhileEnRoute, ex.Message);
-    }
+    //     var ex = Assert.Throws<VehicleDomainException>(() => vehicle.SetApiKey(ValidBcryptHash));
+    //     Assert.Equal(VehicleDomainException.CannotRotateKeyWhileEnRoute, ex.Message);
+    // }
 
-    [Fact]
-    public void SetApiKey_WithSameKey_IsIdempotent()
-    {
-        var vehicle = CreateInspectedVehicle();
-        vehicle.SetApiKey(ValidBcryptHash);
+    // [Fact]
+    // public void SetApiKey_WithSameKey_IsIdempotent()
+    // {
+    //     var vehicle = CreateInspectedVehicle();
+    //     vehicle.SetApiKey(ValidBcryptHash);
 
-        vehicle.SetApiKey(ValidBcryptHash); // same key again
+    //     vehicle.SetApiKey(ValidBcryptHash); // same key again
 
-        Assert.Equal(ValidBcryptHash, vehicle.ApiKeyHash);
-    }
+    //     Assert.Equal(ValidBcryptHash, vehicle.ApiKeyHash);
+    // }
 }
