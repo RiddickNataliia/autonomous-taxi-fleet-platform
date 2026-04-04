@@ -17,8 +17,7 @@ internal abstract class BaseRepository<T> : IRepository<T> where T : class
     public async Task Add(T entity, CancellationToken cancellationToken = default)
         => await DbSet.AddAsync(entity, cancellationToken);
 
-    // for detached entities (e.g. from a unit test that builds an entity outside a DbContext scope).
-    public Task Update(T entity, CancellationToken cancellationToken = default)
+    public Task Update(T entity, CancellationToken cancellationToken = default) // for detached entities (e.g. from a unit test that builds an entity outside a DbContext scope).
     {
         DbSet.Update(entity);
         return Task.CompletedTask;

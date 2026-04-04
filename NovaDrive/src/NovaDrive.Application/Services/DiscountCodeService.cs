@@ -1,13 +1,59 @@
-// // In DiscountCodeService (Application layer)
-// public async Task CreateDiscountCode(CreateDiscountCodeDto dto)
-// {
-//     var code = DiscountCode.Create(
-//         dto.Code,
-//         dto.Type,
-//         dto.Value,
-//         dto.MinimumRideValue,
-//         dto.ExpirationDate);
+using NovaDrive.Application.DTOs;
+using NovaDrive.Domain.Exceptions;
+using NovaDrive.Domain.Interfaces;
 
-//     await _discountRepository.Add(code);
-//     await _unitOfWork.SaveChanges();
-// }
+namespace NovaDrive.Application.Services;
+
+public interface IDiscountService
+{
+    Task<DiscountCodeResponse> CreateCode(CreateDiscountCodeRequest request, CancellationToken ct = default);
+    Task<DiscountCodeResponse> GetByCode(string code, CancellationToken ct = default);
+    Task DeactivateCode(Guid codeId, CancellationToken ct = default);
+}
+public sealed class DiscountService : IDiscountService
+{
+    private readonly IDiscountCodeRepository _discountRepo;
+    private readonly IUnitOfWork             _unitOfWork;
+
+    public DiscountService(IDiscountCodeRepository discountRepo, IUnitOfWork unitOfWork)
+    {
+        _discountRepo = discountRepo;
+        _unitOfWork   = unitOfWork;
+    }
+
+    public async Task<DiscountCodeResponse> CreateCode(
+        CreateDiscountCodeRequest request, CancellationToken ct = default)
+    {
+        if (!Enum.TryParse<DiscountType>(request.Type, ignoreCase: true, out var type)
+            || type == DiscountType.Unknown)
+            throw new DiscountDomainException(DiscountDomainException.InvalidType);
+
+        var code = DiscountCode.Create(
+            request.Code,
+            type,
+            request.Value,
+            request.MinimumRideValue,
+            request.ExpirationDate);
+
+        await _discountRepo.Add(code, ct);
+        await _unitOfWork.SaveChanges(ct);
+        return code.ToResponse();
+    }
+
+    public async Task<DiscountCodeResponse> GetByCode(string code, CancellationToken ct = default)
+    {
+        var entity = await _discountRepo.GetByCode(code, ct)
+            ?? throw new KeyNotFoundException($"Discount code '{code}' not found.");
+        return entity.ToResponse();
+    }
+
+    public async Task DeactivateCode(Guid codeId, CancellationToken ct = default)
+    {
+        var entity = await _discountRepo.GetById(codeId, ct)
+            ?? throw new KeyNotFoundException("Discount code not found.");
+
+        entity.Deactivate();
+        await _unitOfWork.SaveChanges(ct);
+    }
+
+}

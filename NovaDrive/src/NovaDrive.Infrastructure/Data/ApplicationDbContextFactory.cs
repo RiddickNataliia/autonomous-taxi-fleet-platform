@@ -6,11 +6,9 @@ internal sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
-        // Fall back to a local dev connection string when no environment variable is set.
-        // In CI / Docker the real connection string is injected via environment variables.
         var connectionString =
             Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")
-            ?? "Host=localhost;Port=5432;Database=novadrive;Username=postgres;Password=postgres";
+            ?? "Host=localhost;Port=5432;Database=novadrive;Username=postgres;Password=postgres"; // Fall back to a local dev connection string when no environment variable is set.
 
         optionsBuilder.UseNpgsql(
             connectionString,

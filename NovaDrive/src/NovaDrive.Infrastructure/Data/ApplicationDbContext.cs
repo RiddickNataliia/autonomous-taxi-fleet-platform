@@ -9,7 +9,6 @@ public class ApplicationDbContext : DbContext
         public DbSet<User>            Users            { get; set; }
         public DbSet<Passenger>       Passengers       { get; set; }
         public DbSet<Vehicle>         Vehicles         { get; set; }
-        public DbSet<VehicleApiKey>   VehicleApiKeys   { get; set; }
         public DbSet<Ride>            Rides            { get; set; }
         public DbSet<Transaction>     Transactions     { get; set; }
         public DbSet<MaintenanceLog>  MaintenanceLogs  { get; set; }
@@ -63,6 +62,7 @@ public class ApplicationDbContext : DbContext
                         value => new Vin(value))
                     .HasMaxLength(17)
                     .IsRequired();
+                entity.Property(v => v.ApiKeyHash).IsRequired(false);
                 entity.OwnsOne(v => v.CurrentLocation, gps =>
                 {
                     gps.Property(g => g.Latitude).HasColumnName("LocationLatitude");
@@ -72,24 +72,6 @@ public class ApplicationDbContext : DbContext
                 {
                     battery.Property(b => b.Percentage).HasColumnName("BatteryPercentage");
                 });
-            });
-
-            modelBuilder.Entity<VehicleApiKey>(entity =>
-            {
-                entity.HasKey(k => k.Id);
-                entity.Property(k => k.KeyHash)
-                    .HasMaxLength(60)   // BCrypt hashes are always exactly 60 chars
-                    .IsRequired();
-                entity.Property(k => k.Label)
-                    .HasMaxLength(200);
-
-                // for fast lookup of "the active key for vehicle X"
-                entity.HasIndex(k => new { k.VehicleId, k.IsActive });
-
-                entity.HasOne<Vehicle>()
-                    .WithMany()
-                    .HasForeignKey(k => k.VehicleId)
-                    .OnDelete(DeleteBehavior.Cascade);
             });
 
 

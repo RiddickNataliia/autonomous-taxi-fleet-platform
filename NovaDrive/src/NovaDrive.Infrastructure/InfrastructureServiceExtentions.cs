@@ -23,7 +23,12 @@ public static class InfrastructureService
         services.AddScoped<IMaintenanceLogRepository, MaintenanceLogRepository>();
         services.AddScoped<ISupportTicketRepository,  SupportTicketRepository>();
         services.AddScoped<IDiscountCodeRepository,    DiscountCodeRepository>();
-        services.AddScoped<IVehicleApiKeyRepository,   VehicleApiKeyRepository>();
+        services.AddScoped<ISensorDiagnosticRepository, SensorDiagnosticRepository>();
+        services.AddScoped<ITelemetryRepository,        TelemetryRepository>();
+
+        // Payment gateway (Transient — stateless, safe to create per-call)
+        services.AddScoped<IPaymentGateway, DemoPaymentGateway>();
+        
 
         // Unit of Work
         // Scoped so it shares the same DbContext instance as the repositories above.

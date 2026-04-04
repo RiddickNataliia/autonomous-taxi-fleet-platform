@@ -14,7 +14,7 @@ public class Vehicle
     public BatteryLevel Battery { get; private set; } = new(100);
     public VehicleStatus Status { get; private set; } = VehicleStatus.Inactive;
     public DateTimeOffset? LastInspectionDate { get; private set; }
-    // public string? ApiKeyHash { get; private set; }
+    public string? ApiKeyHash { get; private set; }
 
     private Vehicle() { }
 
@@ -30,6 +30,26 @@ public class Vehicle
         Status            = status;
         CurrentLocation   = currentLocation ?? new GpsLocation(0, 0);
         Battery           = battery ?? new BatteryLevel(100);
+    }
+
+    /// <summary>
+    /// Assigns a new API key to this vehicle.
+    /// </summary>
+    /// <param name="hashedKey">The BCrypt hash of the generated API key.</param>
+    public void SetApiKey(string hashedKey)
+    {
+        if (string.IsNullOrWhiteSpace(hashedKey))
+            throw new VehicleDomainException(VehicleDomainException.InvalidApiKey);
+
+        if (!hashedKey.StartsWith("$2") || hashedKey.Length != 60)
+            throw new VehicleDomainException(VehicleDomainException.InvalidApiKey);
+
+        if (Status == VehicleStatus.EnRoute)
+            throw new VehicleDomainException(VehicleDomainException.CannotRotateKeyWhileEnRoute);
+
+        if (ApiKeyHash == hashedKey) return;
+
+        ApiKeyHash = hashedKey;
     }
 
 

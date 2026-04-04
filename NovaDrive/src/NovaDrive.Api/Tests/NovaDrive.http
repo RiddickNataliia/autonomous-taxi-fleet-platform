@@ -1,0 +1,49 @@
+@url = http://localhost:8080
+@auth0_domain = dev-wcshgsensn2evwsg.us.auth0.com
+@audience = https://novadrive-api
+@client_id = fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf
+
+# Generate a PKCE pair at: https://developer.pingidentity.com/en/tools/pkce-code-generator.html
+@code_verifier = PASTE_VERIFIER_HERE
+@code_challenge = PASTE_CHALLENGE_HERE
+@code_challenge_method = S256
+
+@code =
+
+###
+# Step 1: Open this URL in your browser, log in, copy the code from /callback page
+# https://{{auth0_domain}}/authorize?response_type=code
+#   &client_id={{client_id}}
+#   &redirect_uri={{url}}/callback
+#   &scope=openid%20profile%20email%20read:rides%20create:rides%20read:profile
+#   &audience={{audience}}
+#   &code_challenge={{code_challenge}}
+#   &code_challenge_method={{code_challenge_method}}
+
+###
+# Step 2: Paste the code above into @code, then run this to get your token
+# @name tokenRequest
+POST https://{{auth0_domain}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&client_id={{client_id}}
+&code_verifier={{code_verifier}}
+&code={{code}}
+&redirect_uri={{url}}/callback
+
+###
+# Step 3: Call protected endpoints using the token
+GET {{url}}/api/v1/rides/my
+Authorization: Bearer {{tokenRequest.response.body.$.access_token}}
+
+###
+# Client Credentials (vehicle simulator / M2M)
+# @name m2mToken
+POST https://{{auth0_domain}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id=YOUR_M2M_CLIENT_ID
+&client_secret=YOUR_M2M_CLIENT_SECRET
+&audience={{audience}}
