@@ -20,9 +20,9 @@ public class SensorDiagnosticService : ISensorDiagnosticService
         _vehicleRepository = vehicleRepository;
     }
 
-    public async Task LogDiagnosticAsync(LogDiagnosticRequest request)
+    public async Task LogDiagnostic(LogDiagnosticRequest request)
     {
-        var vehicle = await _vehicleRepository.GetByIdAsync(request.VehicleId)
+        var vehicle = await _vehicleRepository.GetById(request.VehicleId)
             ?? throw new KeyNotFoundException(VehicleDomainException.NotFound);
 
         var diagnostic = new SensorDiagnostic
@@ -37,16 +37,9 @@ public class SensorDiagnosticService : ISensorDiagnosticService
         await _repository.Add(diagnostic);
     }
 
-    public async Task<IEnumerable<SensorDiagnosticResponse>> GetByVehicleAsync(Guid vehicleId)
-    {
-        var diagnostics = await _repository.GetByVehicleId(vehicleId);
-        return diagnostics.Select(d => d.ToResponse());
-    }
+    public async Task<IEnumerable<SensorDiagnosticResponse>> GetByVehicle(Guid vehicleId)
+        => (await _repository.GetByVehicleId(vehicleId)).Select(d => d.ToResponse());
 
-    public async Task<IEnumerable<SensorDiagnosticResponse>> GetBySeverityAsync(DiagnosticSeverity severity)
-    {
-        var diagnostics = await _repository.GetBySeverity(severity);
-        return diagnostics.Select(d => d.ToResponse());
-    }
+    public async Task<IEnumerable<SensorDiagnosticResponse>> GetBySeverity(DiagnosticSeverity severity)
+        => (await _repository.GetBySeverity(severity)).Select(d => d.ToResponse());
 }
-

@@ -64,7 +64,7 @@ public sealed class PaymentService : IPaymentService
         }
 
         await _unitOfWork.SaveChanges(ct);
-        return transaction.toResponse();
+        return transaction.ToResponse();
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public sealed class PaymentService : IPaymentService
         var transaction = await _transactionRepo.GetByRideId(rideId, ct)
             ?? throw new KeyNotFoundException("No transaction found for this ride.");
 
-        return transaction.toResponse();
+        return transaction.ToResponse();
     }
 
 }

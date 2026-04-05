@@ -11,6 +11,6 @@ public class SensorDiagnostic
 
     public string? RawSensorData { get; init; }
 
-    private SensorDiagnostic() { }
+    internal SensorDiagnostic() { }
 }
 

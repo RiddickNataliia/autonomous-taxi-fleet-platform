@@ -31,12 +31,7 @@ public static class InfrastructureService
         
 
         // Unit of Work
-        // Scoped so it shares the same DbContext instance as the repositories above.
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-        // Payment gateway
-        // Transient: stateless, safe to create per-call.
-        services.AddTransient<IPaymentGateway, DemoPaymentGateway>();
 
         return services;
     }

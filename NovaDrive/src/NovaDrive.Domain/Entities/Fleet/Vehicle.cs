@@ -18,7 +18,7 @@ public class Vehicle
 
     private Vehicle() { }
 
-    //for testing to enforce creation though the factory method with validation.
+    //for testing to avoid creation though the factory method with validation.
     //allows setting all properties including those with private setters
     internal Vehicle(string licensePlate, string modelName, Vin vin, int yearOfManufacture = 2023, VehicleType type = VehicleType.Standard, VehicleStatus status = VehicleStatus.Inactive, GpsLocation? currentLocation = null, BatteryLevel? battery = null)
     {
@@ -121,6 +121,17 @@ public class Vehicle
             else if (Status == VehicleStatus.Active)
                 Status = VehicleStatus.Inactive;
         }
+    }
+
+    /// <summary>
+    /// Clears the API key, sed for key rotation and revocation.
+    /// </summary>
+    /// <exception cref="VehicleDomainException"></exception>
+    public void ClearApiKey()
+    {
+        if (Status == VehicleStatus.EnRoute)
+            throw new VehicleDomainException(VehicleDomainException.CannotRotateKeyWhileEnRoute);
+        ApiKeyHash = null;
     }
 
 }

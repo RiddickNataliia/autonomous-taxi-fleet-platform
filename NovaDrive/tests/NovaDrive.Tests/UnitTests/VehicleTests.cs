@@ -304,4 +304,31 @@ public class VehicleTests
 
         Assert.Equal(ValidBcryptHash, vehicle.ApiKeyHash);
     }
+
+    [Fact]
+    public void ClearApiKey_WhenKeyExists_SetsApiKeyHashToNull()
+    {
+        var vehicle = CreateInspectedVehicle();
+        vehicle.SetApiKey(ValidBcryptHash);
+
+        vehicle.ClearApiKey();
+
+        Assert.Null(vehicle.ApiKeyHash);
+    }
+
+    [Fact]
+    public void ClearApiKey_WhenEnRoute_Throws()
+    {
+        var vehicle = CreateEnRouteVehicle();
+        var ex = Assert.Throws<VehicleDomainException>(() => vehicle.ClearApiKey());
+        Assert.Equal(VehicleDomainException.CannotRotateKeyWhileEnRoute, ex.Message);
+    }
+
+    [Fact]
+    public void ClearApiKey_WhenNoKeyExists_IsIdempotent()
+    {
+        var vehicle = CreateInspectedVehicle();
+        vehicle.ClearApiKey(); // no key set — should not throw
+        Assert.Null(vehicle.ApiKeyHash);
+    }
 }

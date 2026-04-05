@@ -2,7 +2,6 @@ namespace NovaDrive.Application;
 
 /// <summary>
 /// Registers all Application-layer services into the DI container.
-/// Call from Program.cs:  builder.Services.AddApplication();
 /// </summary>
 public static class ApplicationServiceExtensions
 {
@@ -14,6 +13,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IVehicleService,  VehicleService>();
         services.AddScoped<ISupportService,  SupportService>();
         services.AddScoped<IDiscountService, DiscountService>();
+        services.AddScoped<ISensorDiagnosticService, SensorDiagnosticService>();
 
         // FluentValidation
         services.AddValidatorsFromAssembly(typeof(ApplicationServiceExtensions).Assembly);

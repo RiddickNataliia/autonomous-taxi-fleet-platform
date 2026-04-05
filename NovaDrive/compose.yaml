@@ -40,6 +40,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=novadrive;Username=postgres;Password=postgres
       - ConnectionStrings__Mongo=mongodb://mongo:27017
+      - Auth0__Domain=dev-wcshgsensn2evwsg.us.auth0.com
+      - Auth0__Audience=https://novadrive-api
     depends_on:
       postgres:
         condition: service_healthy

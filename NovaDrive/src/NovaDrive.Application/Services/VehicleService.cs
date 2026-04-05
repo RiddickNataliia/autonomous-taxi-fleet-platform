@@ -1,5 +1,3 @@
-using System.Reflection.Emit;
-
 namespace NovaDrive.Application.Services;
 
 public interface IVehicleService
@@ -185,7 +183,7 @@ public sealed class VehicleService : IVehicleService
         if (string.IsNullOrEmpty(vehicle.ApiKeyHash))
             throw new VehicleDomainException(VehicleDomainException.NoActiveApiKey);
 
-        vehicle.SetApiKey(null!);
+        vehicle.RevokeApiKey();
         await _unitOfWork.SaveChanges(ct);
     }
 }

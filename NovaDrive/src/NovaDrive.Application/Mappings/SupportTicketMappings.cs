@@ -2,7 +2,7 @@ namespace NovaDrive.Application.Mappings;
 
 public static class SupportTicketMappings
 {
-    public static TicketResponse MapToResponse(this SupportTicket t) => new(
+    public static TicketResponse ToResponse(this SupportTicket t) => new(
         TicketId:    t.Id,
         PassengerId: t.PassengerId,
         Subject:     t.Subject,
