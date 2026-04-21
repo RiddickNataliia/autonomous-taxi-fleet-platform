@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/simulator/">
+    <Project Path="simulator/Simulator.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/NovaDrive.Api/NovaDrive.Api.csproj" />
     <Project Path="src/NovaDrive.Application/NovaDrive.Application.csproj" />

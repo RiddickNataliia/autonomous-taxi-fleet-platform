@@ -46,10 +46,10 @@ public class ExceptionHandlingMiddleware
             DomainException                => (StatusCodes.Status422UnprocessableEntity, "Business rule violation"),
             KeyNotFoundException           => (StatusCodes.Status404NotFound,            "Resource not found"),
             UnauthorizedAccessException    => (StatusCodes.Status403Forbidden,           "Access denied"),
-            _                              => (StatusCodes.Status500InternalServerError,  "An unexpected error occurred")
+            _                              => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
         };
 
-        // Log 5xx as errors, 4xx as warnings — keeps the noise down
+        // Log 5xx as errors, 4xx as warnings to keeps the noise down
         if (statusCode >= 500)
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
         else
@@ -59,14 +59,14 @@ public class ExceptionHandlingMiddleware
         {
             Status = statusCode,
             Title  = title,
-            // Only expose detail in Development — avoids leaking internals in Production
+            // Only expose detail in Development to avoid leaking internals in Production
             Detail = _env.IsDevelopment() || statusCode < 500 ? ex.Message : null,
             Instance = context.Request.Path
         };
-
+        
         context.Response.ContentType = "application/problem+json";
         context.Response.StatusCode  = statusCode;
-
+        // Serialize the ProblemDetails object to JSON and write it to the response body
         await context.Response.WriteAsJsonAsync(problem);
     }
 }

@@ -124,9 +124,10 @@ public class Vehicle
     }
 
     /// <summary>
-    /// Clears the API key, sed for key rotation and revocation.
+    /// Removes the vehicle's API key hash, immediately preventing the vehicle
+    /// simulator from authenticating. Used when a key is compromised or the
+    /// vehicle is decommissioned. A new key can be provisioned afterwards.
     /// </summary>
-    /// <exception cref="VehicleDomainException"></exception>
     public void ClearApiKey()
     {
         if (Status == VehicleStatus.EnRoute)

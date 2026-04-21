@@ -86,3 +86,22 @@ public class UpdateVehicleVitalsValidator : AbstractValidator<UpdateVehicleVital
         RuleFor(x => x.BatteryPercentage).InclusiveBetween(0, 100);
     }
 }
+
+public class UpdateProfileValidator : AbstractValidator<UpdateProfileRequest>
+{
+    public UpdateProfileValidator()
+    {
+        RuleFor(x => x.FullName)
+            .NotEmpty()
+            .MaximumLength(200);
+
+        RuleFor(x => x.HomeAddress)
+            .NotEmpty()
+            .MaximumLength(300);
+
+        RuleFor(x => x.PreferredPaymentMethod)
+            .NotEmpty()
+            .Must(v => Enum.TryParse<PaymentMethod>(v, ignoreCase: true, out var m) && m != PaymentMethod.Unknown)
+            .WithMessage("Payment method must be a valid value (e.g. CreditCard, DebitCard, Cash).");
+    }
+}

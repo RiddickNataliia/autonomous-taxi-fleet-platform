@@ -14,6 +14,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<ISupportService,  SupportService>();
         services.AddScoped<IDiscountService, DiscountService>();
         services.AddScoped<ISensorDiagnosticService, SensorDiagnosticService>();
+        services.AddScoped<IPassengerService, PassengerService>();
 
         // FluentValidation
         services.AddValidatorsFromAssembly(typeof(ApplicationServiceExtensions).Assembly);

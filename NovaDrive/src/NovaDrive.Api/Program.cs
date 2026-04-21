@@ -37,7 +37,7 @@ try
     // ── Application services + FluentValidation ───────────────────────────────
     builder.Services.AddApplication();
 
-    // ── Auth0 Authentication ──────────────────────────────────────────────────
+    // AUTH0 AUTHENTICATION
     var auth0Domain = builder.Configuration["Auth0:Domain"]
         ?? throw new InvalidOperationException("Missing configuration: Auth0:Domain");
     var auth0Audience = builder.Configuration["Auth0:Audience"]
@@ -60,7 +60,7 @@ try
             };
         });
 
-    // ── Authorization policies ────────────────────────────────────────────────
+    // AUTHORIZATION POLICIES
     builder.Services.AddAuthorization(options =>
     {
         options.AddPolicy("read:rides",      p => p.RequireAssertion(ctx => HasScopeOrPermission(ctx.User, "read:rides")));
@@ -101,8 +101,8 @@ try
         Log.Information("Migrations applied.");
     }
 
-    // ── Middleware pipeline (ORDER MATTERS) ───────────────────────────────────
-    app.UseExceptionHandling();
+    // MIDDLEWARE PIPELINE
+    app.UseExceptionHandling(); // Custom middleware to catch unhandled exceptions
 
     app.UseSerilogRequestLogging(opts =>
         opts.MessageTemplate =
@@ -113,10 +113,11 @@ try
 
     app.UseHttpsRedirection();
     app.UseCors();
+    app.UseVehicleApiKeyAuth(); // Custom middleware for authenticating vehicles using API keys, done before standard auth to allow vehicle simulators to authenticate without user tokens
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // ── Endpoints ─────────────────────────────────────────────────────────────
+    // ENDPOINTS
     app.MapHealthChecks("/health");
 
     // Callback endpoint for Auth0 Authorization Code flow testing
@@ -170,7 +171,7 @@ finally
     Log.CloseAndFlush();
 }
 
-// ── Local functions (must be after app.Run() in top-level statements) ────────
+// LOCAL FUNCTIONS
 
 static bool HasScopeOrPermission(ClaimsPrincipal user, string required)
 {
