@@ -42,14 +42,12 @@ public sealed class VehicleService : IVehicleService
         if (existing is not null)
             throw new VehicleDomainException(VehicleDomainException.VinAlreadyRegistered);
 
-        var vehicle = new Vehicle
-        {
-            VIN               = new Vin(request.Vin),
-            LicensePlate      = request.LicensePlate,
-            ModelName         = request.ModelName,
-            YearOfManufacture = request.YearOfManufacture,
-            Type              = type
-        };
+        var vehicle = Vehicle.Create(
+            licensePlate:      request.LicensePlate,
+            modelName:         request.ModelName,
+            vin:               new Vin(request.Vin),
+            yearOfManufacture: request.YearOfManufacture,
+            type:              type);
 
         await _vehicleRepo.Add(vehicle, ct);
         await _unitOfWork.SaveChanges(ct);
@@ -125,7 +123,8 @@ public sealed class VehicleService : IVehicleService
     public async Task<MaintenanceLogResponse> AddMaintenanceLog(
         CreateLogRequest request, CancellationToken ct = default)
     {
-        await _vehicleRepo.GetById(request.VehicleId, ct)
+        // Ensure the vehicle exists before adding a log
+        _ = await _vehicleRepo.GetById(request.VehicleId, ct)
             ?? throw new KeyNotFoundException(VehicleDomainException.NotFound);
 
         var log = MaintenanceLog.Create(
@@ -183,7 +182,7 @@ public sealed class VehicleService : IVehicleService
         if (string.IsNullOrEmpty(vehicle.ApiKeyHash))
             throw new VehicleDomainException(VehicleDomainException.NoActiveApiKey);
 
-        vehicle.RevokeApiKey();
+        vehicle.ClearApiKey();
         await _unitOfWork.SaveChanges(ct);
     }
 }

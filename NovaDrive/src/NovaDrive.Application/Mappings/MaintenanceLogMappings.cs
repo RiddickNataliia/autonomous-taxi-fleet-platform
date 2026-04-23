@@ -1,8 +1,8 @@
 namespace NovaDrive.Application.Mappings;
 
-public static class VehicleMapping
+public static class MaintenanceLogMappings
 {
-    public static MaintenanceLogResponse LogToResponse(this MaintenanceLog m) => new(
+    public static MaintenanceLogResponse ToResponse(this MaintenanceLog m) => new(
         LogId:              m.Id,
         VehicleId:          m.VehicleId,
         ServiceDate:        m.ServiceDate,

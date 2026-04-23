@@ -15,6 +15,11 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IDiscountService, DiscountService>();
         services.AddScoped<ISensorDiagnosticService, SensorDiagnosticService>();
         services.AddScoped<IPassengerService, PassengerService>();
+        services.AddScoped<IUserProvisioningService, UserProvisioningService>();
+
+        // Domain services — stateless, transient
+        services.AddTransient<IPricingEngine, PricingEngine>();
+        services.AddTransient<IRideMatchingService, RideMatchingService>();
 
         // FluentValidation
         services.AddValidatorsFromAssembly(typeof(ApplicationServiceExtensions).Assembly);

@@ -1,4 +1,3 @@
-// Interfaces/ISensorDiagnosticRepository.cs
 namespace NovaDrive.Domain.Interfaces;
 
 public interface ISensorDiagnosticRepository

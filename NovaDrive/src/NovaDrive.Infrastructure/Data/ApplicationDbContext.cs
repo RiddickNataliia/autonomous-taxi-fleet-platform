@@ -101,7 +101,7 @@ public class ApplicationDbContext : DbContext
                 entity.Property(m => m.Description)
                     .HasMaxLength(500)
                     .IsRequired();
-                entity.Property(m => m.TechnitianName)
+                entity.Property(m => m.TechnicianName)
                     .HasMaxLength(100)
                     .IsRequired();
                 entity.HasOne<Vehicle>()
@@ -125,10 +125,11 @@ public class ApplicationDbContext : DbContext
 
             modelBuilder.Entity<DiscountCode>(entity =>
             {
-                entity.HasIndex(d => d.Code)
-                    .IsUnique()
+                entity.Property(d => d.Code)
                     .HasMaxLength(50)
                     .IsRequired();
+                entity.HasIndex(d => d.Code)
+                    .IsUnique();
                 entity.Property(d => d.Value)
                     .HasPrecision(18, 2);
                 entity.Property(d => d.MinimumRideValue)

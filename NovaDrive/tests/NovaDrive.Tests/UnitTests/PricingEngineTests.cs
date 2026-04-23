@@ -535,6 +535,31 @@ public class PricingEngineTests
         Assert.Equal(6.05m, result.TotalGross);
     }
 
+
+    [Fact]
+    public void LoyaltyDiscount_WhenMinimumFareApplied_PointsNotDeducted()
+    {
+        // Base fare: €2.50 + (0km × €1.10) + (0min × €0.30) = €2.50 → below minimum → €5.00
+        // 500 points = potential €5.00 discount, cap: €2.50 × 0.20 = €0.50
+        // Actual loyalty discount calculated: €0.50
+        // Fare after loyalty: €2.50 - €0.50 = €2.00
+        // Minimum fare enforced: €5.00
+        // Actual saving: €0.50 - max(0, €5.00 - €2.00) = €0.50 - €3.00 = negative → €0.00
+        // Points spent: 0 — no real saving occurred
+        var result = _engine.CalculateFinalPrice(
+            distanceKm:      0.0,
+            durationMinutes: 0,
+            vehicleType:     VehicleType.Standard,
+            requestTime:     new DateTime(2025, 6, 15, 12, 0, 0),
+            availablePoints: 500,
+            code:            null
+        );
+
+        Assert.Equal(5.00m, result.NetAmount);
+        Assert.Equal(0m,    result.LoyaltyDiscountApplied);
+        Assert.Equal(0,     result.PointsUsed);
+    }
+    
     [Fact]
     public void StandardRide_LargeDiscounts_NeverProducesNegativeAmount()
     {

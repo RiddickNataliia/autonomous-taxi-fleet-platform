@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-// ── Configuration ─────────────────────────────────────────────────────────────
+// Configuration
 
 const string ApiBaseUrl             = "http://localhost:8080";
 const int    TelemetryIntervalMs    = 3_000;
@@ -17,7 +17,7 @@ var vehicles = new[]
     // (VehicleId: Guid.Parse("ANOTHER-GUID"), ApiKey: "ANOTHER-KEY"),
 };
 
-// ── Validation ────────────────────────────────────────────────────────────────
+// Validation
 
 if (vehicles[0].ApiKey == "PASTE-PLAIN-TEXT-KEY-HERE")
 {
@@ -28,7 +28,7 @@ if (vehicles[0].ApiKey == "PASTE-PLAIN-TEXT-KEY-HERE")
     return;
 }
 
-// ── JSON ──────────────────────────────────────────────────────────────────────
+// JSON 
 
 var json = new JsonSerializerOptions
 {
@@ -37,7 +37,7 @@ var json = new JsonSerializerOptions
     Converters             = { new JsonStringEnumConverter() },
 };
 
-// ── Wait for API ──────────────────────────────────────────────────────────────
+// Wait for API 
 
 Console.WriteLine($"Waiting for API at {ApiBaseUrl}...");
 using var healthClient = new HttpClient { BaseAddress = new Uri(ApiBaseUrl) };
@@ -52,7 +52,7 @@ while (DateTime.UtcNow < deadline)
 }
 Console.WriteLine("API is healthy — starting simulation.\n");
 
-// ── GPS route (circle around Ghent) ──────────────────────────────────────────
+// GPS route (circle around Ghent)
 
 static (double Lat, double Lon)[] BuildRoute(double cLat, double cLon, double km, int steps)
 {
@@ -67,9 +67,9 @@ static (double Lat, double Lon)[] BuildRoute(double cLat, double cLon, double km
     return route;
 }
 
-var route = BuildRoute(centreLat: 51.0543, centreLon: 3.7174, km: 1.5, steps: 120);
+var route = BuildRoute(cLat: 51.0543, cLon: 3.7174, km: 1.5, steps: 120);
 
-// ── Sensor fault data ─────────────────────────────────────────────────────────
+// Sensor fault data 
 
 var sensorErrors = new Dictionary<string, string[]>
 {
@@ -85,7 +85,7 @@ string RandomSeverity()
     return roll < 40 ? "Info" : roll < 75 ? "Warning" : roll < 95 ? "Error" : "Critical";
 }
 
-// ── Run one vehicle ───────────────────────────────────────────────────────────
+// Run one vehicle
 
 async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
 {
@@ -107,7 +107,7 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
 
     while (!ct.IsCancellationRequested)
     {
-        // ── Advance state ─────────────────────────────────────────────────────
+        // Advance state
         routeIndex = (routeIndex + 1) % route.Length;
         speed       = Math.Clamp(speed + Random.Shared.NextDouble() * 10 - 5, 30, 80);
         temperature = Math.Clamp(temperature + (Random.Shared.NextDouble() - 0.5), 20, 45);
@@ -115,7 +115,7 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
 
         var (lat, lon) = route[routeIndex];
 
-        // ── Telemetry ─────────────────────────────────────────────────────────
+        // Telemetry
         var telemetry = new
         {
             vehicleId,
@@ -141,7 +141,7 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
             Log(tag, ConsoleColor.Red, $"Telemetry error — {ex.Message}");
         }
 
-        // ── Sensor diagnostics ────────────────────────────────────────────────
+        //  Sensor diagnostics 
         if ((DateTime.UtcNow - lastDiagnosticAt).TotalMilliseconds >= DiagnosticIntervalMs)
         {
             lastDiagnosticAt = DateTime.UtcNow;
@@ -199,7 +199,7 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
     }
 }
 
-// ── Start all vehicles concurrently ──────────────────────────────────────────
+// Start all vehicles concurrently 
 
 using var cts = new CancellationTokenSource();
 
@@ -218,7 +218,7 @@ catch (OperationCanceledException) { }
 
 Console.WriteLine("Simulator stopped.");
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+//  Helpers 
 
 static void Log(string tag, ConsoleColor color, string message)
 {

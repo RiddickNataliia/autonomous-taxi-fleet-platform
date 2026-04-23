@@ -8,7 +8,7 @@ using NovaDrive.Infrastructure;
 using Serilog;
 using Serilog.Events;
 
-// ── Bootstrap logger ─────────────────────────────────────────────────────────
+//  Bootstrap logger 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .WriteTo.Console()
@@ -20,7 +20,7 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    // ── Serilog ───────────────────────────────────────────────────────────────
+    // Serilog
     builder.Host.UseSerilog((ctx, services, config) => config
         .ReadFrom.Configuration(ctx.Configuration)
         .ReadFrom.Services(services)
@@ -31,10 +31,10 @@ try
             rollingInterval: RollingInterval.Day,
             retainedFileCountLimit: 14));
 
-    // ── Infrastructure (Postgres + MongoDB + all repositories + UoW) ─────────
+    //  Infrastructure (Postgres + MongoDB + all repositories + UoW) 
     builder.Services.AddInfrastructure(builder.Configuration);
 
-    // ── Application services + FluentValidation ───────────────────────────────
+    //  Application services + FluentValidation 
     builder.Services.AddApplication();
 
     // AUTH0 AUTHENTICATION
@@ -73,24 +73,27 @@ try
         options.AddPolicy("admin:discounts", p => p.RequireAssertion(ctx => HasScopeOrPermission(ctx.User, "admin:discounts")));
     });
 
-    // ── OpenAPI / Swagger ─────────────────────────────────────────────────────
+    //  OpenAPI / Swagger \
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
 
-    // ── Health checks ─────────────────────────────────────────────────────────
+    // Health checks 
     builder.Services.AddHealthChecks();
 
-    // ── CORS ──────────────────────────────────────────────────────────────────
+    builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>();
+
+    //  CORS 
     builder.Services.AddCors(options =>
         options.AddDefaultPolicy(policy =>
             policy.AllowAnyOrigin()
                   .AllowAnyMethod()
                   .AllowAnyHeader()));
 
-    // ── Build ─────────────────────────────────────────────────────────────────
+    //  Build 
     var app = builder.Build();
 
-    // ── Auto-migrate on startup ───────────────────────────────────────────────
+    //  Auto-migrate on startup 
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider

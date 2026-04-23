@@ -25,16 +25,11 @@ public class SensorDiagnosticService : ISensorDiagnosticService
         var vehicle = await _vehicleRepository.GetById(request.VehicleId)
             ?? throw new KeyNotFoundException(VehicleDomainException.NotFound);
 
-        var diagnostic = new SensorDiagnostic
-        {
-            VehicleId     = vehicle.Id,
-            SensorType    = request.SensorType,
-            ErrorCode     = request.ErrorCode,
-            Severity      = request.Severity,
-            RawSensorData = request.RawSensorData
-        };
+        var diagnostic = SensorDiagnostic.Create(
+            vehicle.Id, request.SensorType, request.ErrorCode, 
+            request.Severity, request.RawSensorData);
 
-        await _repository.Add(diagnostic);
+                await _repository.Add(diagnostic);
     }
 
     public async Task<IEnumerable<SensorDiagnosticResponse>> GetByVehicle(Guid vehicleId)

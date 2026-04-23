@@ -14,6 +14,13 @@ public static class InfrastructureService
             )
         );
 
+        // MongoDB
+        services.AddSingleton<IMongoDatabase>(sp =>
+        {
+            var client = new MongoClient(configuration.GetConnectionString("Mongo"));
+            return client.GetDatabase("novadrive");
+        });
+
         // Repositories (Scoped — one instance per HTTP request)
         services.AddScoped<IUserRepository,         UserRepository>();
         services.AddScoped<IPassengerRepository,    PassengerRepository>();

@@ -49,7 +49,7 @@ public sealed class SupportService : ISupportService
         Guid passengerId, CancellationToken ct = default)
         => (await _ticketRepo.GetByPassengerId(passengerId, ct)).Select(t => t.ToResponse());
 
-    public async Task<TicketResponse> StartWorkAsync(Guid ticketId, CancellationToken ct = default)
+    public async Task<TicketResponse> StartWork(Guid ticketId, CancellationToken ct = default)
     {
         var ticket = await _ticketRepo.GetById(ticketId, ct)
             ?? throw new KeyNotFoundException("Support ticket not found.");

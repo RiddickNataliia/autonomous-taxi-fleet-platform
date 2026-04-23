@@ -9,3 +9,9 @@ global using NovaDrive.Domain.ValueObjects;
 
 global using NovaDrive.Infrastructure.Data;
 global using NovaDrive.Infrastructure.Repositories;
+global using NovaDrive.Infrastructure.Payments;
+
+global using MongoDB.Driver;
+global using Microsoft.EntityFrameworkCore.Design;
+
+

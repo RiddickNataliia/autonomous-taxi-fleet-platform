@@ -16,31 +16,37 @@ public sealed class RideService : IRideService
     private readonly IVehicleRepository       _vehicleRepo;
     private readonly IDiscountCodeRepository  _discountRepo;
     private readonly IUnitOfWork              _unitOfWork;
+    private readonly IPricingEngine           _pricingEngine;
+    private readonly IRideMatchingService     _matchingService;
 
     public RideService(
         IRideRepository         rideRepo,
         IPassengerRepository    passengerRepo,
         IVehicleRepository      vehicleRepo,
         IDiscountCodeRepository discountRepo,
-        IUnitOfWork             unitOfWork)
+        IUnitOfWork             unitOfWork,
+        IPricingEngine          pricingEngine,
+        IRideMatchingService    matchingService)
     {
         _rideRepo      = rideRepo;
         _passengerRepo = passengerRepo;
         _vehicleRepo   = vehicleRepo;
         _discountRepo  = discountRepo;
         _unitOfWork    = unitOfWork;
+        _pricingEngine = pricingEngine;
+        _matchingService = matchingService;
     }
 
     public async Task<RideResponse> RequestRide(
         RequestRideRequest request, CancellationToken ct = default)
     {
-        await _passengerRepo.GetById(request.PassengerId, ct)
+        // verify passenger exists before assigning a vehicle
+        _ = await _passengerRepo.GetById(request.PassengerId, ct)
             ?? throw new KeyNotFoundException(UserDomainException.PassengerNotFound);
 
         var activeVehicles    = await _vehicleRepo.GetAllActive(ct);
         var passengerLocation = new GpsLocation(request.PassengerLatitude, request.PassengerLongitude);
-        var vehicle           = new RideMatchingService()
-                                    .FindBestMatch(passengerLocation, activeVehicles, request.EstimatedDistanceKm)
+        var vehicle           = _matchingService.FindBestMatch(passengerLocation, activeVehicles, request.EstimatedDistanceKm)
                                 ?? throw new InvalidOperationException(
                                     "No available vehicle found within range. Please try again shortly.");
 
@@ -87,8 +93,7 @@ public sealed class RideService : IRideService
         if (!string.IsNullOrWhiteSpace(request.DiscountCode))
             discountCode = await _discountRepo.GetByCode(request.DiscountCode, ct);
 
-        var engine = new PricingEngine();
-        var result = engine.CalculateFinalPrice(
+        var result = _pricingEngine.CalculateFinalPrice(
             distanceKm:      request.ActualDistanceKm,
             durationMinutes: request.ActualDurationMinutes,
             vehicleType:     vehicle.Type,
@@ -98,7 +103,7 @@ public sealed class RideService : IRideService
 
         ride.CompleteRide(result, request.ActualDistanceKm, request.ActualDurationMinutes);
         passenger.DeductPoints(result.PointsUsed);
-        passenger.EarnPoints(engine.CalculateEarnedPoints(result.TotalGross));
+        passenger.EarnPoints(_pricingEngine.CalculateEarnedPoints(result.TotalGross));
 
         await _unitOfWork.SaveChanges(ct);
         return ride.ToResponse();

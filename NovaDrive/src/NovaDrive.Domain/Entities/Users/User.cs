@@ -5,7 +5,7 @@ public class User
     public Guid Id { get; init; } = Guid.NewGuid();
 
     public required string Email { get; set; }
-    public required string PasswordHash { get; set; }
+    public string Auth0UserId { get; private set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.Unknown;
 
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
@@ -21,22 +21,22 @@ public class User
     /// <summary>
     /// Factory method for creating any user. Use Passenger.Create() for passenger accounts.
     /// </summary>
-    public static User Create(string email, string passwordHash, UserRole role)
+    public static User Create(string email, string auth0UserId, UserRole role)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new UserDomainException(UserDomainException.InvalidEmail);
 
-        if (string.IsNullOrWhiteSpace(passwordHash))
-            throw new UserDomainException(UserDomainException.InvalidPassword);
+        if (string.IsNullOrWhiteSpace(auth0UserId))
+            throw new UserDomainException(UserDomainException.InvalidAuth0UserId);
 
         if (role == UserRole.Unknown)
             throw new UserDomainException(UserDomainException.InvalidRole);
 
         return new User
         {
-            Email = email,
-            PasswordHash = passwordHash,
-            Role = role
+            Email      = email,
+            Auth0UserId = auth0UserId,
+            Role       = role
         };
     }
 

@@ -1,7 +1,18 @@
 // Services.cs/PricingEngine.cs
 namespace NovaDrive.Domain.Services;
 
-public class PricingEngine
+public interface IPricingEngine
+{
+    int CalculateEarnedPoints(decimal totalGross);
+    PricingResult CalculateFinalPrice(
+        double distanceKm,
+        int durationMinutes,
+        VehicleType vehicleType,
+        DateTime requestTime,
+        int availablePoints,
+        DiscountCode? code);
+}
+public class PricingEngine : IPricingEngine
 {
     private const decimal StartingRate = 2.50m;
     private const decimal RatePerKm = 1.10m;
@@ -15,11 +26,12 @@ public class PricingEngine
     /// <summary>
     /// Calculates loyalty points earned from a completed ride.
     /// Rate: €1 spent = 10 points. Fractional points are truncated.
-    /// </summary>
+    /// Spend rate: 100 points = €1 discount (10% return on spending).
+    /// Fractional points are truncated — €19.99 earns 199 points, not 200.
     /// <param name="totalGross">The total amount charged including VAT.</param>
+    /// </summary>
     public int CalculateEarnedPoints(decimal totalGross)
     {
-        // if (totalGross <= 0) return 0;
 
         return (int)(totalGross * 10);
     }
@@ -77,6 +89,12 @@ public class PricingEngine
         currentFare = Math.Max(0m, currentFare);
         decimal netAmount = Math.Max(MinimumFare, Math.Round(currentFare, 2, MidpointRounding.AwayFromZero));
 
+        //realculate actual loyalty saving after minimum fare is applies
+        decimal actualNetBeforeMinimum = Math.Round(currentFare, 2, MidpointRounding.AwayFromZero);
+        decimal actualLoyaltySaving = actualLoyaltyDiscount - Math.Max(0m, MinimumFare - actualNetBeforeMinimum);
+        actualLoyaltySaving = Math.Max(0m, actualLoyaltySaving);
+        pointsSpent = (int)(Math.Floor(actualLoyaltySaving) * PointsPerEuro);
+
         // STEP 7: VAT on top of the net amount
         decimal vatAmount = Math.Round(netAmount * VatRate, 2, MidpointRounding.AwayFromZero);
         decimal totalGross = netAmount + vatAmount;
@@ -85,7 +103,7 @@ public class PricingEngine
             NetAmount: netAmount,
             VatAmount: vatAmount,
             TotalGross: totalGross,
-            LoyaltyDiscountApplied: actualLoyaltyDiscount,
+            LoyaltyDiscountApplied: actualLoyaltySaving,
             CodeDiscountApplied: codeDiscount,
             PointsUsed: pointsSpent
         );

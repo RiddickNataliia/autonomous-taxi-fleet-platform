@@ -3,10 +3,8 @@ namespace NovaDrive.Infrastructure.Repositories;
 public class SensorDiagnosticRepository : ISensorDiagnosticRepository
 {
     private readonly IMongoCollection<SensorDiagnostic> _collection;
-    public SensorDiagnosticRepository(IConfiguration config)
+    public SensorDiagnosticRepository(IMongoDatabase db)
     {
-        var client = new MongoClient(config.GetConnectionString("Mongo"));
-        var db = client.GetDatabase("novadrive");
         _collection = db.GetCollection<SensorDiagnostic>("sensor_diagnostics");
     }
 

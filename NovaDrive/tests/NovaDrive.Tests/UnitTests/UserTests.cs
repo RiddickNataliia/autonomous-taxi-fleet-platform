@@ -23,11 +23,11 @@ public class UserTests
     }
 
     [Fact]
-    public void Create_WithEmptyPassword_Throws()
+    public void Create_WithEmptyAuth0UserId_Throws()
     {
         var ex = Assert.Throws<UserDomainException>(() =>
             User.Create("jane@example.com", "", UserRole.Passenger));
-        Assert.Equal(UserDomainException.InvalidPassword, ex.Message);
+        Assert.Equal(UserDomainException.InvalidAuth0UserId, ex.Message);
     }
 
     [Fact]

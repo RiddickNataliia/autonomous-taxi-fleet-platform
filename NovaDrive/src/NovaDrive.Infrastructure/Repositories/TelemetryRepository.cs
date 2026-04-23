@@ -4,22 +4,30 @@ public class TelemetryRepository : ITelemetryRepository
 {
     private readonly IMongoCollection<Telemetry> _collection;
 
-    public TelemetryRepository(IConfiguration config)
+    public TelemetryRepository(IMongoDatabase db)
     {
-        var client = new MongoClient(config.GetConnectionString("Mongo"));
-        var db = client.GetDatabase("novadrive");
         _collection = db.GetCollection<Telemetry>("telemetry");
     }
 
-    public async Task AddAsync(Telemetry telemetry)
-        => await _collection.InsertOneAsync(telemetry);
+    public async Task Add(Telemetry telemetry, CancellationToken cancellationToken = default)
+        => await _collection.InsertOneAsync(telemetry, cancellationToken: cancellationToken);
 
-    public async Task<IEnumerable<Telemetry>> GetByVehicleIdAsync(Guid vehicleId, int limit = 100)
+    public async Task<IEnumerable<Telemetry>> GetByVehicleId(Guid vehicleId, int limit = 100, CancellationToken cancellationToken = default)
     {
         return await _collection
             .Find(t => t.VehicleId == vehicleId)
-            .SortByDescending(t => t.RecordedAt)
+            .SortByDescending(t => t.Timestamp)
             .Limit(limit)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Telemetry>> GetByRideId(Guid rideId, CancellationToken cancellationToken = default)
+    {
+        return await _collection
+            .Find(t => t.RideId == rideId)
+            .SortByDescending(t => t.Timestamp)
+            .ToListAsync(cancellationToken);
     }
 }
+
+

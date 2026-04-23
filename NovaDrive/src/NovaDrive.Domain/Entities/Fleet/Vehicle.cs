@@ -6,8 +6,8 @@ public class Vehicle
     public Vin VIN { get; init; } = default!;
     public int YearOfManufacture { get; init; }
     public string LicensePlate { get; init; } = string.Empty;
-    public string ModelName { get; set; } = string.Empty;
-    public VehicleType Type { get; set; } = VehicleType.Unknown;
+    public string ModelName { get; init; } = string.Empty;
+    public VehicleType Type { get; init; } = VehicleType.Unknown;
     
     //Vitals and status
     public GpsLocation CurrentLocation { get; private set; } = new(0, 0);
@@ -17,6 +17,27 @@ public class Vehicle
     public string? ApiKeyHash { get; private set; }
 
     private Vehicle() { }
+
+    public static Vehicle Create(string licensePlate, string modelName, Vin vin, int yearOfManufacture, VehicleType type)
+    {
+        if (string.IsNullOrWhiteSpace(licensePlate))
+            throw new VehicleDomainException(VehicleDomainException.InvalidLicensePlate);
+
+        if (string.IsNullOrWhiteSpace(modelName))
+            throw new VehicleDomainException(VehicleDomainException.InvalidModelName);
+
+        if (type == VehicleType.Unknown)
+            throw new VehicleDomainException(VehicleDomainException.InvalidType);
+
+        return new Vehicle
+        {
+            VIN               = vin,
+            LicensePlate      = licensePlate,
+            ModelName         = modelName,
+            YearOfManufacture = yearOfManufacture,
+            Type              = type
+        };
+    }
 
     //for testing to avoid creation though the factory method with validation.
     //allows setting all properties including those with private setters

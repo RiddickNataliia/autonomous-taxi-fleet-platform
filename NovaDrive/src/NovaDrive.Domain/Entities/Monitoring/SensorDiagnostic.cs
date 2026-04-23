@@ -12,5 +12,19 @@ public class SensorDiagnostic
     public string? RawSensorData { get; init; }
 
     internal SensorDiagnostic() { }
+
+
+    public static SensorDiagnostic Create(Guid vehicleId, SensorType sensorType, 
+    string errorCode, DiagnosticSeverity severity, string? rawSensorData)
+    {
+        return new SensorDiagnostic
+        {
+            VehicleId     = vehicleId,
+            SensorType    = sensorType,
+            ErrorCode     = errorCode,
+            Severity      = severity,
+            RawSensorData = rawSensorData
+        };
+    }
 }
 
