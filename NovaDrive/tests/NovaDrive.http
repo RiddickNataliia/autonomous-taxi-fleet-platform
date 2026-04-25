@@ -46,10 +46,10 @@ Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-"vin": "WVWZZZ1JZXW000001",
-"licensePlate": "1-ABC-234",
-"modelName": "Volkswagen Golf",
-"yearOfManufacture": 2021,
+"vin": "JHMCM56557C404453",
+"licensePlate": "2-XYZ-567",
+"modelName": "Honda Accord",
+"yearOfManufacture": 2022,
 "vehicleType": "Standard"
 }
 

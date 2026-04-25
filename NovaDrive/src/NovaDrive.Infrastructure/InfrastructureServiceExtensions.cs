@@ -14,6 +14,26 @@ public static class InfrastructureService
             )
         );
         BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+
+        BsonClassMap.RegisterClassMap<GpsLocation>(cm =>
+        {
+            cm.MapCreator(g => new GpsLocation(g.Latitude, g.Longitude));
+            cm.MapProperty(g => g.Latitude);
+            cm.MapProperty(g => g.Longitude);
+        });
+
+        BsonClassMap.RegisterClassMap<Telemetry>(cm =>
+        {
+            cm.AutoMap();
+            cm.GetMemberMap(t => t.BatteryPercentage)
+                .SetSerializer(new Int32Serializer(BsonType.Int32));
+            cm.GetMemberMap(t => t.Speed)
+                .SetSerializer(new DoubleSerializer(BsonType.Double));
+            cm.GetMemberMap(t => t.InternalTemperature)
+                .SetSerializer(new DoubleSerializer(BsonType.Double));
+        });
+
+
         // MongoDB
         services.AddSingleton<IMongoDatabase>(sp =>
         {

@@ -4,17 +4,15 @@ using System.Text.Json.Serialization;
 
 // Configuration
 
-const string ApiBaseUrl             = "http://localhost:8080";
+const string ApiBaseUrl             = "http://localhost:5154";
 const int    TelemetryIntervalMs    = 3_000;
 const int    DiagnosticIntervalMs   = 15_000;
 const double DiagnosticFaultChance  = 0.10;
 
 var vehicles = new[]
 {
-    (VehicleId: Guid.Parse("PASTE-VEHICLE-GUID-HERE"),
-     ApiKey:    "PASTE-PLAIN-TEXT-KEY-HERE"),
-    // add more vehicles here:
-    // (VehicleId: Guid.Parse("ANOTHER-GUID"), ApiKey: "ANOTHER-KEY"),
+    (VehicleId: Guid.Parse("22b21e43-0151-4ef4-8ea6-1e37d89d5607"),
+     ApiKey:    "KTMoiTpEf0as0sf9SLJY0Fc+rbZI5iN/pJf+efIa93I="),
 };
 
 // Validation
@@ -118,12 +116,11 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
         // Telemetry
         var telemetry = new
         {
-            vehicleId,
-            latitude             = lat,
-            longitude            = lon,
-            speedKmh             = Math.Round(speed, 1),
-            batteryPercentage    = battery,
-            hardwareTemperatureC = Math.Round(temperature, 1),
+            latitude            = lat,
+            longitude           = lon,
+            speedKmh            = Math.Round(speed, 1),
+            batteryPercentage   = battery,
+            hardwareTemperature = Math.Round(temperature, 1),
         };
 
         try
@@ -133,8 +130,11 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
                 Log(tag, ConsoleColor.Cyan,
                     $"Telemetry  lat={lat:F4} lon={lon:F4}  speed={speed:F1} km/h  battery={battery}%");
             else
+            {
+                var body = await r.Content.ReadAsStringAsync(ct);
                 Log(tag, ConsoleColor.Yellow,
-                    $"Telemetry rejected — HTTP {(int)r.StatusCode}");
+                    $"Telemetry rejected — HTTP {(int)r.StatusCode} — {body}");
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
