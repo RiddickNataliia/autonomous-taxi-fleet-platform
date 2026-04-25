@@ -6,6 +6,10 @@ public class TransactionDomainException : DomainException
     public const string NoReference = "A bank reference is required for successful transactions.";
     public const string CannotFail = "Only pending transactions can be failed.";
     public const string InvalidReference = "The bank reference provided is invalid or empty.";
+    public const string InvalidRideId = "A valid ride ID is required.";
+    public const string InvalidAmount = "Transaction amount must be greater than zero.";
+    public const string InvalidCurrency = "A valid currency is required.";
+    public const string InvalidPaymentMethod = "A valid payment method is required.";
     public TransactionDomainException(string message) : base(message)
     {
     }

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NovaDrive.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260423202532_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260425115253_FixRidePassengerForeignKey")]
+    partial class FixRidePassengerForeignKey
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -322,17 +322,13 @@ namespace NovaDrive.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<string>("VIN")
-                        .IsRequired()
-                        .HasMaxLength(17)
-                        .HasColumnType("character varying(17)");
 
                     b.Property<int>("YearOfManufacture")
                         .HasColumnType("integer");
@@ -340,9 +336,6 @@ namespace NovaDrive.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LicensePlate")
-                        .IsUnique();
-
-                    b.HasIndex("VIN")
                         .IsUnique();
 
                     b.ToTable("Vehicles", t =>
@@ -373,10 +366,10 @@ namespace NovaDrive.Infrastructure.Migrations
 
             modelBuilder.Entity("NovaDrive.Domain.Entities.Ride", b =>
                 {
-                    b.HasOne("NovaDrive.Domain.Entities.User", null)
+                    b.HasOne("NovaDrive.Domain.Entities.Passenger", null)
                         .WithMany()
                         .HasForeignKey("PassengerId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -438,10 +431,35 @@ namespace NovaDrive.Infrastructure.Migrations
                                 .HasForeignKey("VehicleId");
                         });
 
+                    b.OwnsOne("NovaDrive.Domain.ValueObjects.Vin", "VIN", b1 =>
+                        {
+                            b1.Property<Guid>("VehicleId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(17)
+                                .HasColumnType("character varying(17)")
+                                .HasColumnName("VIN");
+
+                            b1.HasKey("VehicleId");
+
+                            b1.HasIndex("Value")
+                                .IsUnique();
+
+                            b1.ToTable("Vehicles");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VehicleId");
+                        });
+
                     b.Navigation("Battery")
                         .IsRequired();
 
                     b.Navigation("CurrentLocation")
+                        .IsRequired();
+
+                    b.Navigation("VIN")
                         .IsRequired();
                 });
 

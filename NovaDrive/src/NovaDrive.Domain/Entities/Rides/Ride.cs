@@ -20,6 +20,8 @@ public class Ride
     public int LoyaltyPointsUsed { get; private set; }
     public decimal CodeDiscountApplied { get; private set; }
 
+    
+
     /// <summary>
     /// Initializes the ride by setting its status to Requested.
     /// </summary>
@@ -73,10 +75,14 @@ public class Ride
     /// Cancels the ride if it hasn't been finished yet.
     /// </summary>
     /// <exception cref="RideDomainException.AlreadyCompleted">Thrown if the ride is already marked as Completed.</exception>
+    /// <exception cref="RideDomainException.CannotCancelEnRoute">Thrown if the ride is already en route.</exception>
     public void CancelRide()
     {
         if (Status == RideStatus.Completed)
             throw new RideDomainException(RideDomainException.AlreadyCompleted);
+
+        if (Status == RideStatus.EnRoute)
+            throw new RideDomainException(RideDomainException.CannotCancelEnRoute);
 
         if (Status == RideStatus.Canceled) return;
 

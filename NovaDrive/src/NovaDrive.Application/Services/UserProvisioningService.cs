@@ -1,7 +1,8 @@
 namespace NovaDrive.Application.Services;
 public interface IUserProvisioningService
 {
-    Task<Passenger> EnsurePassengerExists(string auth0UserId, string email, CancellationToken ct = default);
+    Task<(PassengerResponse Response, bool IsNew)> EnsurePassengerExists(string auth0UserId, string email, CancellationToken ct = default);
+
 }
 
 public sealed class UserProvisioningService : IUserProvisioningService
@@ -20,20 +21,26 @@ public sealed class UserProvisioningService : IUserProvisioningService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Passenger> EnsurePassengerExists(
+    public async Task<(PassengerResponse Response, bool IsNew)> EnsurePassengerExists(
         string auth0UserId, string email, CancellationToken ct = default)
     {
         var existingUser = await _userRepo.GetByAuth0UserId(auth0UserId, ct);
         if (existingUser is not null)
-            return existingUser.PassengerProfile!;
+        {
+        existingUser.RecordLogin();
+        await _unitOfWork.SaveChanges(ct);
+        return (existingUser.PassengerProfile!.ToResponse(), false);
+        }
 
         var user = User.Create(email, auth0UserId, UserRole.Passenger);
+        user.RecordLogin();
         await _userRepo.Add(user, ct);
 
-        var passenger = Passenger.Create(user.Id, email, string.Empty);
+        var passenger = Passenger.Create(user.Id);
         await _passengerRepo.Add(passenger, ct);
 
         await _unitOfWork.SaveChanges(ct);
-        return passenger;
+        return (passenger.ToResponse(), true);
     }
+
 }

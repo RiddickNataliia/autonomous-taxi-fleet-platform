@@ -5,6 +5,7 @@ public interface IPaymentService
     Task<TransactionResponse> ProcessPayment(ProcessPaymentRequest request, CancellationToken ct = default);
     Task<TransactionResponse> GetTransactionByRide(Guid rideId, CancellationToken ct = default);
 }
+
 public sealed class PaymentService : IPaymentService
 {
     private readonly ITransactionRepository _transactionRepo;
@@ -12,28 +13,29 @@ public sealed class PaymentService : IPaymentService
     private readonly IPassengerRepository   _passengerRepo;
     private readonly IPaymentGateway        _gateway;
     private readonly IUnitOfWork            _unitOfWork;
+    private readonly IInvoiceService        _invoiceService;
+    private readonly IEmailService          _emailService;
 
     public PaymentService(
         ITransactionRepository transactionRepo,
         IRideRepository        rideRepo,
         IPassengerRepository   passengerRepo,
         IPaymentGateway        gateway,
-        IUnitOfWork            unitOfWork)
+        IUnitOfWork            unitOfWork,
+        IInvoiceService        invoiceService,
+        IEmailService          emailService)
     {
         _transactionRepo = transactionRepo;
         _rideRepo        = rideRepo;
         _passengerRepo   = passengerRepo;
         _gateway         = gateway;
         _unitOfWork      = unitOfWork;
+        _invoiceService  = invoiceService;
+        _emailService    = emailService;
     }
 
-    /// <summary>
-    /// Creates a Transaction, calls the payment gateway, marks it
-    /// successful or failed, then marks the Ride as paid on success.
-    /// Everything is committed in a single SaveChanges call.
-    /// </summary>
-    /// <exception cref="KeyNotFoundException">Thrown if the Ride doesn't exist.</exception>
-    public async Task<TransactionResponse> ProcessPayment(ProcessPaymentRequest request, CancellationToken ct = default)
+    public async Task<TransactionResponse> ProcessPayment(
+        ProcessPaymentRequest request, CancellationToken ct = default)
     {
         var ride = await _rideRepo.GetById(request.RideId, ct)
             ?? throw new KeyNotFoundException(RideDomainException.NotFound);
@@ -42,13 +44,11 @@ public sealed class PaymentService : IPaymentService
             || method == PaymentMethod.Unknown)
             throw new UserDomainException(UserDomainException.InvalidPaymentMethod);
 
-        var transaction = new Transaction
-        {
-            RideId        = ride.Id,
-            Amount        = ride.FinalPrice,
-            Currency      = Currency.EUR,
-            PaymentMethod = method
-        };
+        var transaction = Transaction.Create(
+            rideId:   ride.Id,
+            amount:   ride.FinalPrice,
+            currency: Currency.EUR,
+            method:   method);
 
         await _transactionRepo.Add(transaction, ct);
 
@@ -64,13 +64,51 @@ public sealed class PaymentService : IPaymentService
         }
 
         await _unitOfWork.SaveChanges(ct);
-        return transaction.ToResponse();
-    }
 
-    /// <summary>
-    /// Retrieves the Transaction associated with a given Ride.
-    /// </summary>
-    /// <exception cref="KeyNotFoundException">Thrown if no transaction is found for the given Ride.</exception>
+        // Send invoice only on successful payment
+        if (transaction.Status == TransactionStatus.Successful)
+                {
+                    var passenger = await _passengerRepo.GetByIdWithUser(ride.PassengerId, ct);
+                    Console.WriteLine($"Passenger: {passenger?.FullName}, User: {passenger?.User?.Email}");
+                    if (passenger?.User is not null)
+                    {
+                        try
+                        {
+                            var invoiceBytes = _invoiceService.GenerateInvoice(
+                                passengerName:   passenger.FullName,
+                                passengerEmail:  passenger.User.Email,
+                                departure:       ride.Departure,
+                                destination:     ride.Destination,
+                                distanceKm:      ride.DistanceKm,
+                                durationMinutes: ride.DurationMinutes,
+                                netAmount:       ride.NetAmount,
+                                vatAmount:       ride.VatAmount,
+                                totalAmount:     transaction.Amount,
+                                loyaltyDiscount: ride.LoyaltyDiscountApplied,
+                                codeDiscount:    ride.CodeDiscountApplied,
+                                paymentMethod:   transaction.PaymentMethod.ToString(),
+                                paymentStatus:   transaction.Status.ToString(),
+                                bankReference:   transaction.BankReference,
+                                paymentDate:     transaction.PaymentDate);
+
+                            await _emailService.SendInvoice(
+                                passenger.User.Email,
+                                passenger.FullName,
+                                invoiceBytes,
+                                ct);
+
+                            Console.WriteLine("Invoice sent successfully");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Invoice error: {ex.Message}\n{ex.StackTrace}");
+                        }
+                    }
+                }
+
+                return transaction.ToResponse();
+            }
+
     public async Task<TransactionResponse> GetTransactionByRide(
         Guid rideId, CancellationToken ct = default)
     {
@@ -79,5 +117,4 @@ public sealed class PaymentService : IPaymentService
 
         return transaction.ToResponse();
     }
-
 }

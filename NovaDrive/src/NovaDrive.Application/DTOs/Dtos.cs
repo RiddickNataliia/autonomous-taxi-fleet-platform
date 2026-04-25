@@ -178,3 +178,20 @@ public record SensorDiagnosticResponse(
     string? RawSensorData,
     DateTimeOffset Timestamp
 );
+
+// Telemetry
+public record LogTelemetryRequest(
+    double Latitude,
+    double Longitude,
+    double SpeedKmh,
+    int BatteryPercentage,
+    double HardwareTemperature);
+
+public record TelemetryResponse(
+    Guid VehicleId,
+    double Latitude,
+    double Longitude,
+    double SpeedKmh,
+    int BatteryPercentage,
+    double HardwareTemperature,
+    DateTimeOffset Timestamp);

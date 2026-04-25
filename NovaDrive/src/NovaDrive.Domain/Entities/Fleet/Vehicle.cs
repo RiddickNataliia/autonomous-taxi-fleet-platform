@@ -18,6 +18,20 @@ public class Vehicle
 
     private Vehicle() { }
 
+    //for testing to avoid creation though the factory method with validation.
+    //allows setting all properties including those with private setters
+    internal Vehicle(string licensePlate, string modelName, Vin vin, int yearOfManufacture = 2023, VehicleType type = VehicleType.Standard, VehicleStatus status = VehicleStatus.Inactive, GpsLocation? currentLocation = null, BatteryLevel? battery = null)
+    {
+        LicensePlate      = licensePlate;
+        ModelName         = modelName;
+        VIN               = vin;
+        YearOfManufacture = yearOfManufacture;
+        Type              = type;
+        Status            = status;
+        CurrentLocation   = currentLocation ?? new GpsLocation(0, 0);
+        Battery           = battery ?? new BatteryLevel(100);
+    }
+
     public static Vehicle Create(string licensePlate, string modelName, Vin vin, int yearOfManufacture, VehicleType type)
     {
         if (string.IsNullOrWhiteSpace(licensePlate))
@@ -37,20 +51,6 @@ public class Vehicle
             YearOfManufacture = yearOfManufacture,
             Type              = type
         };
-    }
-
-    //for testing to avoid creation though the factory method with validation.
-    //allows setting all properties including those with private setters
-    internal Vehicle(string licensePlate, string modelName, Vin vin, int yearOfManufacture = 2023, VehicleType type = VehicleType.Standard, VehicleStatus status = VehicleStatus.Inactive, GpsLocation? currentLocation = null, BatteryLevel? battery = null)
-    {
-        LicensePlate      = licensePlate;
-        ModelName         = modelName;
-        VIN               = vin;
-        YearOfManufacture = yearOfManufacture;
-        Type              = type;
-        Status            = status;
-        CurrentLocation   = currentLocation ?? new GpsLocation(0, 0);
-        Battery           = battery ?? new BatteryLevel(100);
     }
 
     /// <summary>

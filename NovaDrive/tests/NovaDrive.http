@@ -1,0 +1,262 @@
+@baseUrl = http://localhost:5154
+@auth0Domain = dev-wcshgsensn2evwsg.us.auth0.com
+@clientId = fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf
+@audience = https://novadrive-api
+@code_verifier = GLwJPitfcYXDyjVLlCKg_dKc4qZe3-cxPFII7re0zzw
+@code_challenge = Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI
+
+# ── Step 1: Get Tokens ────────────────────────────────────────────────────────
+
+# Open in browser, login as PASSENGER, copy code:
+https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
+
+@passengerCode = nvyin-Cp6ONWj3OBpgWa8_C_DydJ550c1n2-_QjKpk_U7
+
+### Get passenger token
+# @name passengerTokenRequest
+POST https://{{auth0Domain}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&client_id={{clientId}}&code={{passengerCode}}&code_verifier={{code_verifier}}&redirect_uri={{baseUrl}}/callback
+
+###
+@passengerToken = {{passengerTokenRequest.response.body.access_token}}
+
+# Open in browser, login as ADMIN, copy code:
+https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
+
+@adminCode = RJ8QZoqXwG9TA97aosfrIkRAjbysOvSdNIpBzlwskIVqn
+
+### Get admin token
+# @name adminTokenRequest
+POST https://{{auth0Domain}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&client_id={{clientId}}&code={{adminCode}}&code_verifier={{code_verifier}}&redirect_uri={{baseUrl}}/callback
+
+###
+@adminToken = {{adminTokenRequest.response.body.access_token}}
+
+# Step 2: Vehicle Setup ─────────────────────────────────────────────────────
+
+### Register vehicle
+# @name registerVehicle
+POST {{baseUrl}}/api/v1/vehicles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "vin": "3FAHP0HA6AR123456",
+  "licensePlate": "6-MNO-987",
+  "modelName": "Ford Fusion",
+  "yearOfManufacture": 2018,
+  "vehicleType": "Standard"
+}
+
+###
+@vehicleId = {{registerVehicle.response.body.vehicleId}}
+
+### Get vehicle by ID
+GET {{baseUrl}}/api/v1/vehicles/{{vehicleId}}
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Get all vehicles
+GET {{baseUrl}}/api/v1/vehicles/
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Provision API key
+# @name provisionKey
+POST {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/api-key
+Authorization: Bearer {{adminToken}}
+
+###
+@vehicleApiKey = {{provisionKey.response.body.plainTextKey}}
+
+### Update vitals — set location near Brussels
+PUT {{baseUrl}}/api/v1/vehicles/vitals
+X-Vehicle-Id: {{vehicleId}}
+X-Api-Key: {{vehicleApiKey}}
+Content-Type: application/json
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "latitude": 50.8503,
+  "longitude": 4.3517,
+  "batteryPercentage": 85
+}
+
+###
+
+### Record inspection
+POST {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/inspection
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "description": "Annual safety inspection completed",
+  "technicianName": "John Smith",
+  "cost": 150.00,
+  "nextServiceMileage": 50000
+}
+
+###
+
+### Activate vehicle
+PUT {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/activate
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Add maintenance log
+POST {{baseUrl}}/api/v1/vehicles/maintenance
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "description": "Replaced brake pads",
+  "technicianName": "John Smith",
+  "cost": 220.00,
+  "nextServiceMileage": 60000
+}
+
+###
+
+### Get maintenance history
+GET {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/maintenance
+Authorization: Bearer {{adminToken}}
+
+
+# Step 3: Passenger Setup ───────────────────────────────────────────────────
+
+###
+
+### POST /me — first login, provision profile
+POST {{baseUrl}}/api/v1/passengers/me
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### GET /me — get profile
+GET {{baseUrl}}/api/v1/passengers/me
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### PUT /me — update profile
+PUT {{baseUrl}}/api/v1/passengers/me
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Jane Doe",
+  "homeAddress": "123 Main Street, Brussels",
+  "preferredPaymentMethod": "CreditCard"
+}
+
+###
+
+### GET all passengers (admin)
+GET {{baseUrl}}/api/v1/passengers
+Authorization: Bearer {{adminToken}}
+
+# ── Step 4: Rides ─────────────────────────────────────────────────────────────
+
+###
+
+### Request a ride
+# @name requestRide
+POST {{baseUrl}}/api/v1/rides
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "departure": "Brussels Central Station",
+  "destination": "Brussels Airport",
+  "estimatedDistanceKm": 15.5,
+  "passengerLatitude": 50.8503,
+  "passengerLongitude": 4.3517,
+  "discountCode": null
+}
+
+###
+@rideId = {{requestRide.response.body.rideId}}
+
+### Get ride history
+GET {{baseUrl}}/api/v1/rides
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### Get active ride
+GET {{baseUrl}}/api/v1/rides/active
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### Start ride (vehicle)
+PUT {{baseUrl}}/api/v1/rides/{{rideId}}/start
+X-Vehicle-Id: {{vehicleId}}
+X-Api-Key: {{vehicleApiKey}}
+
+###
+
+### Complete ride (vehicle)
+PUT {{baseUrl}}/api/v1/rides/{{rideId}}/complete
+X-Vehicle-Id: {{vehicleId}}
+X-Api-Key: {{vehicleApiKey}}
+Content-Type: application/json
+
+{
+  "actualDistanceKm": 16.2,
+  "actualDurationMinutes": 25,
+  "discountCode": null
+}
+
+###
+
+### Cancel ride (passenger — run this instead of complete to test cancellation)
+PUT {{baseUrl}}/api/v1/rides/{{rideId}}/cancel
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### Get all rides (admin)
+GET {{baseUrl}}/api/v1/rides/admin/all
+Authorization: Bearer {{adminToken}}
+
+# Step 5: Payments ──────────────────────────────────────────────────────────
+
+### Process payment for completed ride
+# @name processPayment
+POST {{baseUrl}}/api/v1/payments
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "rideId": "{{rideId}}",
+  "paymentMethod": "CreditCard"
+}
+
+###
+
+### Get transaction by ride
+GET {{baseUrl}}/api/v1/payments/{{rideId}}
+Authorization: Bearer {{passengerToken}}
+
+
+### Vehicle deactivation and api revocation_________________________
+### Deactivate vehicle
+PUT {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/deactivate
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Revoke API key
+DELETE {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/api-key
+Authorization: Bearer {{adminToken}}

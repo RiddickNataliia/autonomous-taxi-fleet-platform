@@ -1,13 +1,3 @@
-using System.Security.Claims;
-using System.Text.Json;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using NovaDrive.Application;
-using NovaDrive.Api.Middleware;
-using NovaDrive.Infrastructure;
-using Serilog;
-using Serilog.Events;
-
 //  Bootstrap logger 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
@@ -155,15 +145,28 @@ try
 
     app.MapGet("/", () => Results.Redirect("/health")).ExcludeFromDescription();
 
-    // Endpoint groups will be registered here:
-    //   var v1 = app.MapGroup("/api/v1");
-    //   v1.MapUserEndpoints();
-    //   v1.MapVehicleEndpoints();
-    //   v1.MapRideEndpoints();
-    //   v1.MapAdminEndpoints();
+    // Endpoint groups 
+    var v1 = app.MapGroup("/api/v1");
 
+    //  v1.MapUserEndpoints
+    v1.MapGroup("/passengers")
+    .MapPassengerEndpoints();
+
+    //   v1.MapVehicleEndpoints
+    v1.MapGroup("/vehicles")
+    .MapVehicleEndpoints();
+
+    //   v1.MapRideEndpoints
+    v1.MapGroup("/rides")
+    .MapRideEndpoints();
+    //   v1.MapPaymentEndpoints
+    v1.MapGroup("/payments")
+    .MapPaymentEndpoints();
+
+    
+    
     app.Run();
-}
+    }
 catch (Exception ex) when (ex is not HostAbortedException)
 {
     Log.Fatal(ex, "NovaDrive API terminated unexpectedly");

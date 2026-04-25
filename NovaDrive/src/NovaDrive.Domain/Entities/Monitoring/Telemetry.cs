@@ -14,5 +14,21 @@ public class Telemetry
     public double InternalTemperature { get; init; }
 
     private Telemetry() { }
+
+    public static Telemetry Create(Guid vehicleId, GpsLocation location, double speed, int battery, double temperature, Guid? rideId = null)
+    {
+        if (vehicleId == Guid.Empty)
+            throw new ArgumentException("VehicleId is required.");
+
+        return new Telemetry
+        {
+            VehicleId           = vehicleId,
+            GpsCoordinates      = location,
+            Speed               = speed,
+            BatteryPercentage   = battery,
+            InternalTemperature = temperature,
+            RideId              = rideId
+        };
+    }
 }
 

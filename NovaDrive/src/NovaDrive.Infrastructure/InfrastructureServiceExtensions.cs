@@ -21,6 +21,9 @@ public static class InfrastructureService
             return client.GetDatabase("novadrive");
         });
 
+        services.AddScoped<IInvoiceService, PdfInvoiceService>();
+        services.AddScoped<IEmailService, MailKitEmailService>();
+
         // Repositories (Scoped — one instance per HTTP request)
         services.AddScoped<IUserRepository,         UserRepository>();
         services.AddScoped<IPassengerRepository,    PassengerRepository>();

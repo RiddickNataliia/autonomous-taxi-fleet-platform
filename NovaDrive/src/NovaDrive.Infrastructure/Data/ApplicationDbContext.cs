@@ -41,10 +41,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(r => r.Status)
                 .HasConversion<string>() 
                 .IsRequired();
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(r => r.PassengerId)
-                .OnDelete(DeleteBehavior.SetNull);
+        entity.HasOne<Passenger>()
+            .WithMany()
+            .HasForeignKey(r => r.PassengerId)
+            .OnDelete(DeleteBehavior.Restrict);
         });
 
 
@@ -52,16 +52,20 @@ public class ApplicationDbContext : DbContext
             {
                 int nextYear = DateTime.UtcNow.Year + 1;
                 entity.ToTable(t => t.HasCheckConstraint("CK_Vehicle_Year", $"\"YearOfManufacture\" > 1900 AND \"YearOfManufacture\" <= {nextYear}"));
-                entity.HasIndex(v => v.VIN).IsUnique();
+                entity.OwnsOne(v => v.VIN, vin =>
+                {
+                    vin.Property(v => v.Value)
+                        .HasColumnName("VIN")
+                        .HasMaxLength(17)
+                        .IsRequired();
+                    vin.HasIndex(v => v.Value)
+                        .IsUnique();
+                });
                 entity.HasIndex(v => v.LicensePlate).IsUnique();
                 entity.Property(v => v.Type)
                     .HasConversion<string>();
-                entity.Property(v => v.VIN)
-                    .HasConversion(
-                        vin => vin.Value,
-                        value => new Vin(value))
-                    .HasMaxLength(17)
-                    .IsRequired();
+                entity.Property(v => v.Status)
+                    .HasConversion<string>();
                 entity.Property(v => v.ApiKeyHash).IsRequired(false);
                 entity.OwnsOne(v => v.CurrentLocation, gps =>
                 {

@@ -8,6 +8,8 @@ public interface IRideService
     Task<RideResponse> CompleteRide(CompleteRideRequest request, CancellationToken ct = default);
     Task<RideResponse> CancelRide(Guid rideId, CancellationToken ct = default);
     Task<IEnumerable<RideResponse>> GetRidesByPassenger(Guid passengerId, CancellationToken ct = default);
+    Task<IEnumerable<RideResponse>> GetAllRides(CancellationToken ct = default);
+    Task<RideResponse?> GetActiveRide(Guid passengerId, CancellationToken ct = default);
 }
 public sealed class RideService : IRideService
 {
@@ -122,5 +124,14 @@ public sealed class RideService : IRideService
     public async Task<IEnumerable<RideResponse>> GetRidesByPassenger(
         Guid passengerId, CancellationToken ct = default)
         => (await _rideRepo.GetByPassengerId(passengerId, ct)).Select(ride => ride.ToResponse());
+
+    public async Task<IEnumerable<RideResponse>> GetAllRides(CancellationToken ct = default)
+        => (await _rideRepo.GetAll(ct)).Select(r => r.ToResponse());
+
+    public async Task<RideResponse?> GetActiveRide(Guid passengerId, CancellationToken ct = default)
+    {
+        var ride = await _rideRepo.GetActiveByPassengerId(passengerId, ct);
+        return ride?.ToResponse();
+    }
 
 }

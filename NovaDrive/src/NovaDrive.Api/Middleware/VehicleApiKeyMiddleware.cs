@@ -22,7 +22,15 @@ public class VehicleApiKeyMiddleware
     private static readonly string[] ProtectedPaths =
     [
         "/api/v1/telemetry",
-        "/api/v1/diagnostics"
+        "/api/v1/diagnostics",
+        "/api/v1/vehicles/vitals"
+    ];
+
+    // Specific ride actions done by vehicle
+    private static readonly string[] ProtectedSuffixes =
+    [
+        "/start",
+        "/complete"
     ];
 
     public VehicleApiKeyMiddleware(
@@ -38,7 +46,9 @@ public class VehicleApiKeyMiddleware
         // Only intercept vehicle-facing endpoints
         var path = context.Request.Path.Value ?? string.Empty;
         var isProtected = ProtectedPaths.Any(p =>
-            path.StartsWith(p, StringComparison.OrdinalIgnoreCase));
+            path.StartsWith(p, StringComparison.OrdinalIgnoreCase))
+            || ProtectedSuffixes.Any(s =>
+            path.EndsWith(s, StringComparison.OrdinalIgnoreCase));
 
         if (!isProtected)
         {

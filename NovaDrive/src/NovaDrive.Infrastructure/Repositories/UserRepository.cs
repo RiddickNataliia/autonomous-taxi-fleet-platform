@@ -17,5 +17,9 @@ internal sealed class UserRepository : BaseRepository<User>, IUserRepository
 
 
     public async Task<User?> GetByAuth0UserId(string auth0UserId, CancellationToken cancellationToken = default)
-        => await DbSet.FirstOrDefaultAsync(u => u.Auth0UserId == auth0UserId, cancellationToken);
+        => await DbSet
+        .Include(u => u.PassengerProfile)
+        .FirstOrDefaultAsync(u => u.Auth0UserId == auth0UserId, cancellationToken);
 }
+
+

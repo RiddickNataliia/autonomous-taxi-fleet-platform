@@ -5,6 +5,7 @@ public interface IVehicleService
     Task<VehicleResponse> RegisterVehicle(RegisterVehicleRequest request, CancellationToken ct = default);
     Task<VehicleResponse> GetVehicle(Guid vehicleId, CancellationToken ct = default);
     Task<IEnumerable<VehicleResponse>> GetActiveVehicles(CancellationToken ct = default);
+    Task<IEnumerable<VehicleResponse>> GetAllVehicles(CancellationToken ct = default);
     Task<VehicleResponse> ActivateVehicle(Guid vehicleId, CancellationToken ct = default);
     Task<VehicleResponse> DeactivateVehicle(Guid vehicleId, CancellationToken ct = default);
     Task UpdateVitals(UpdateVehicleVitalsRequest request, CancellationToken ct = default);
@@ -37,7 +38,7 @@ public sealed class VehicleService : IVehicleService
             || type == VehicleType.Unknown)
             throw new VehicleDomainException("Invalid vehicle type.");
 
-        // Duplicate VIN check — before touching the DB
+        // Double VIN check — before touching the DB
         var existing = await _vehicleRepo.GetByVin(request.Vin, ct);
         if (existing is not null)
             throw new VehicleDomainException(VehicleDomainException.VinAlreadyRegistered);
@@ -63,6 +64,9 @@ public sealed class VehicleService : IVehicleService
 
     public async Task<IEnumerable<VehicleResponse>> GetActiveVehicles(CancellationToken ct = default)
         => (await _vehicleRepo.GetAllActive(ct)).Select(v => v.ToResponse());
+
+    public async Task<IEnumerable<VehicleResponse>> GetAllVehicles(CancellationToken ct = default)
+        => (await _vehicleRepo.GetAll(ct)).Select(v => v.ToResponse());
 
     public async Task<VehicleResponse> ActivateVehicle(Guid vehicleId, CancellationToken ct = default)
     {
@@ -163,7 +167,7 @@ public sealed class VehicleService : IVehicleService
  
         return new ProvisionApiKeyResponse(
             VehicleId:    vehicleId,
-            PlainTextKey: rawKey,   // returned ONCE — never stored
+            PlainTextKey: rawKey, // returned once — never stored
             Label:        "Provisioned",
             CreatedAt:    DateTimeOffset.UtcNow);
     }

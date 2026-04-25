@@ -4,13 +4,14 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
-COPY ["NovaDrive/src/NovaDrive.Api/NovaDrive.Api.csproj", "NovaDrive/src/NovaDrive.Api/"]
-COPY ["NovaDrive/src/NovaDrive.Application/NovaDrive.Application.csproj", "NovaDrive/src/NovaDrive.Application/"]
-COPY ["NovaDrive/src/NovaDrive.Infrastructure/NovaDrive.Infrastructure.csproj", "NovaDrive/src/NovaDrive.Infrastructure/"]
-COPY ["NovaDrive/src/NovaDrive.Domain/NovaDrive.Domain.csproj", "NovaDrive/src/NovaDrive.Domain/"]
-RUN dotnet restore "NovaDrive/src/NovaDrive.Api/NovaDrive.Api.csproj"
+
+COPY ["src/NovaDrive.Api/NovaDrive.Api.csproj", "src/NovaDrive.Api/"]
+COPY ["src/NovaDrive.Application/NovaDrive.Application.csproj", "src/NovaDrive.Application/"]
+COPY ["src/NovaDrive.Infrastructure/NovaDrive.Infrastructure.csproj", "src/NovaDrive.Infrastructure/"]
+COPY ["src/NovaDrive.Domain/NovaDrive.Domain.csproj", "src/NovaDrive.Domain/"]
+RUN dotnet restore "src/NovaDrive.Api/NovaDrive.Api.csproj"
 COPY . .
-WORKDIR "/src/NovaDrive/src/NovaDrive.Api"
+WORKDIR "/src/src/NovaDrive.Api"
 RUN dotnet build "NovaDrive.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish

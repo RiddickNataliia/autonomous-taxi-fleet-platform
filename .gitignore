@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+#http test files
+/tests/HttpTests/
+
 # User-specific files
 *.rsuser
 *.suo

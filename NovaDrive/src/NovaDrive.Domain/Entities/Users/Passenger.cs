@@ -19,22 +19,14 @@ public class Passenger
     /// Factory method — creates a passenger profile linked to an existing User.
     /// Call this immediately after User.Create() when registering a passenger.
     /// </summary>
-    public static Passenger Create(Guid userId, string fullName, string homeAddress)
+    public static Passenger Create(Guid userId)
     {
         if (userId == Guid.Empty)
             throw new UserDomainException(UserDomainException.InvalidUserId);
 
-        if (string.IsNullOrWhiteSpace(fullName))
-            throw new UserDomainException(UserDomainException.InvalidFullName);
-
-        if (string.IsNullOrWhiteSpace(homeAddress))
-            throw new UserDomainException(UserDomainException.InvalidHomeAddress);
-
         return new Passenger
         {
-            UserId = userId,
-            FullName = fullName,
-            HomeAddress = homeAddress
+            UserId = userId
         };
     }
 

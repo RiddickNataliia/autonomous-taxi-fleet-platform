@@ -20,7 +20,11 @@ internal sealed class VehicleRepository : BaseRepository<Vehicle>, IVehicleRepos
     /// VINs are unique, so this should return either one vehicle or null.
     /// Used during vehicle registration to prevent duplicate VINs, and in the admin dashboard to look up a vehicle by its VIN.
     /// </summary>
+
     public async Task<Vehicle?> GetByVin(string vin, CancellationToken cancellationToken = default)
-        => await DbSet
-            .FirstOrDefaultAsync(v => v.VIN.Value == vin.ToUpperInvariant(), cancellationToken);
+    => await DbSet
+        .FirstOrDefaultAsync(v => v.VIN.Value == vin.ToUpperInvariant(), cancellationToken);
+
+    public async Task<IEnumerable<Vehicle>> GetAll(CancellationToken cancellationToken = default)
+    => await DbSet.ToListAsync(cancellationToken);
 }

@@ -279,6 +279,15 @@ public class RideTests
     }
 
     [Fact]
+    public void CancelRide_WhenEnRoute_Throws()
+    {
+        var ride = CreateEnRouteRide();
+        
+        var ex = Assert.Throws<RideDomainException>(() => ride.CancelRide());
+        Assert.Equal(RideDomainException.CannotCancelEnRoute, ex.Message);
+    }
+
+    [Fact]
     public void CancelRide_WhenAlreadyCanceled_IsIdempotent()
     {
         var ride = CreateRide();

@@ -1,0 +1,71 @@
+@baseUrl = http://localhost:5154
+@auth0Domain = dev-wcshgsensn2evwsg.us.auth0.com
+@clientId = fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf
+@audience = https://novadrive-api
+@code_verifier = GLwJPitfcYXDyjVLlCKg_dKc4qZe3-cxPFII7re0zzw
+@code_challenge = Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI
+### Step 1 — open this URL in your browser, login, copy the code from the callback page
+
+https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
+
+### Step 2 — paste the code and code_verifier here
+@passengerCode = 0LECxQroC6JatIBatyWzxVrGrQl9vugQrdCXtICQsXYGm
+
+
+### Step 3 — exchange code for token
+# @name tokenRequest
+POST https://{{auth0Domain}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&client_id={{clientId}}&code={{passengerCode}}&code_verifier={{code_verifier}}&redirect_uri={{baseUrl}}/callback
+
+### token is now available
+@passengerToken = {{tokenRequest.response.body.access_token}}
+
+
+### Step 4 — open in browser, login as ADMIN, copy code
+https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
+### Step 5 — paste admin code
+@adminCode = BW0WHbCdGCBeHb2ygRoMSGOnD3eRv8ZAbTop1mwCw3C0d
+
+### Step 6 — get admin token
+# @name adminTokenRequest
+POST https://{{auth0Domain}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&client_id={{clientId}}&code={{adminCode}}&code_verifier={{code_verifier}}&redirect_uri={{baseUrl}}/callback
+
+###
+@adminToken = {{adminTokenRequest.response.body.access_token}}
+
+
+# Tests
+
+### POST /me — first login
+POST {{baseUrl}}/api/v1/passengers/me
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### GET /me — get profile
+GET {{baseUrl}}/api/v1/passengers/me
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### PUT /me — update profile
+PUT {{baseUrl}}/api/v1/passengers/me
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Jane Doe",
+  "homeAddress": "123 Main Street, Brussels",
+  "preferredPaymentMethod": "CreditCard"
+}
+
+###
+
+### GET / — get all passengers (admin only)
+GET {{baseUrl}}/api/v1/passengers
+Authorization: Bearer {{adminToken}}

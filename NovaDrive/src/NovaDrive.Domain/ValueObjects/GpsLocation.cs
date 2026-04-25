@@ -37,7 +37,7 @@ public record GpsLocation
         return EarthRadiusKm * c;
     }
 
-    private GpsLocation() { }
+    // private GpsLocation() { }
 
     private static double ToRadians(double angle) => Math.PI * angle / 180.0;
 
