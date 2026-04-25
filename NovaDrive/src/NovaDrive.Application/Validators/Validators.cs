@@ -72,7 +72,6 @@ public class CreateTicketValidator : AbstractValidator<CreateTicketRequest>
         RuleFor(x => x.PassengerId).NotEmpty();
         RuleFor(x => x.Subject).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(2000);
-        RuleFor(x => x.Priority).NotEmpty();
     }
 }
 

@@ -2,7 +2,7 @@ namespace NovaDrive.Application.Services;
 
 public interface ISensorDiagnosticService
 {
-    Task LogDiagnostic(LogDiagnosticRequest request);
+    Task LogDiagnostic(Guid vehicleId, LogDiagnosticRequest request);
     Task<IEnumerable<SensorDiagnosticResponse>> GetByVehicle(Guid vehicleId);
     Task<IEnumerable<SensorDiagnosticResponse>> GetBySeverity(DiagnosticSeverity severity);
 }
@@ -20,9 +20,9 @@ public class SensorDiagnosticService : ISensorDiagnosticService
         _vehicleRepository = vehicleRepository;
     }
 
-    public async Task LogDiagnostic(LogDiagnosticRequest request)
+    public async Task LogDiagnostic(Guid vehicleId, LogDiagnosticRequest request)
     {
-        var vehicle = await _vehicleRepository.GetById(request.VehicleId)
+        var vehicle = await _vehicleRepository.GetById(vehicleId)
             ?? throw new KeyNotFoundException(VehicleDomainException.NotFound);
 
         var diagnostic = SensorDiagnostic.Create(

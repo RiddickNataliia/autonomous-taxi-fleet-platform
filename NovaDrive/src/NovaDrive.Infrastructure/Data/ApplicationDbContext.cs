@@ -121,10 +121,10 @@ public class ApplicationDbContext : DbContext
                     .HasConversion<string>();
                 entity.Property(s => s.Priority)
                     .HasConversion<string>();
-                entity.HasOne<User>()
+                entity.HasOne<Passenger>()
                     .WithMany()
-                    .HasForeignKey(s => s.PassengerId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .HasForeignKey(t => t.PassengerId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<DiscountCode>(entity =>

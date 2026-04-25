@@ -24,6 +24,10 @@ public sealed class DiscountService : IDiscountService
     public async Task<DiscountCodeResponse> CreateCode(
         CreateDiscountCodeRequest request, CancellationToken ct = default)
     {
+        var existing = await _discountRepo.GetByCode(request.Code, ct);
+        if (existing is not null)
+            throw new DiscountDomainException(DiscountDomainException.CodeAlreadyExists);
+            
         if (!Enum.TryParse<DiscountType>(request.Type, ignoreCase: true, out var type)
             || type == DiscountType.Unknown)
             throw new DiscountDomainException(DiscountDomainException.InvalidType);

@@ -17,9 +17,10 @@ public class SupportTicket
     /// <summary>
     /// Factory method to create a new ticket in the 'Open' state.
     /// </summary>
-    public static SupportTicket Create(Guid passengerId, string subject, string description, TicketPriority priority)
+    public static SupportTicket Create(Guid passengerId, string subject, string description)
     {
-        if (string.IsNullOrWhiteSpace(subject)) throw new SupportDomainException(SupportDomainException.InvalidSubject);
+        if (string.IsNullOrWhiteSpace(subject)) 
+            throw new SupportDomainException(SupportDomainException.InvalidSubject);
 
         if (string.IsNullOrWhiteSpace(description)) 
             throw new SupportDomainException(SupportDomainException.InvalidDescription);
@@ -27,10 +28,8 @@ public class SupportTicket
         return new SupportTicket
         {
             PassengerId = passengerId,
-            Subject = subject,
-            Description = description,
-            Priority = priority,
-            Status = TicketStatus.Open
+            Subject     = subject,
+            Description = description
         };
     }
 

@@ -9,12 +9,16 @@ global using NovaDrive.Api.Middleware;
 global using NovaDrive.Infrastructure;
 global using Serilog;
 global using Serilog.Events;
+global using System.Text.Json.Serialization;
 
 
 global using NovaDrive.Domain.Interfaces;
 global using NovaDrive.Domain.Exceptions;
+global using NovaDrive.Domain.Enums;
+global using NovaDrive.Domain.ValueObjects;
 global using NovaDrive.Application.Services;
 global using NovaDrive.Application.DTOs;
+global using NovaDrive.Application.Mappings;
 global using NovaDrive.Infrastructure.Data;
 global using NovaDrive.Api.Extensions;
 global using NovaDrive.Api.Endpoints;

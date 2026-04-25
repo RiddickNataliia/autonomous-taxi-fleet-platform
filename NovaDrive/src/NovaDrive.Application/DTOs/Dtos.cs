@@ -129,8 +129,7 @@ public record MaintenanceLogResponse(
 public record CreateTicketRequest(
     Guid PassengerId,
     string Subject,
-    string Description,
-    string Priority);
+    string Description);
 
 public record TicketResponse(
     Guid TicketId,
@@ -141,6 +140,8 @@ public record TicketResponse(
     string Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset? ResolvedAt);
+
+public record UpdatePriorityRequest(string Priority);
 
 // Discount codes
 
@@ -162,7 +163,6 @@ public record DiscountCodeResponse(
 
 // Sensor diagnostics
 public record LogDiagnosticRequest(
-    Guid VehicleId,
     SensorType SensorType,
     string ErrorCode,
     DiagnosticSeverity Severity,

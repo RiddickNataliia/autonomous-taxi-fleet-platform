@@ -13,7 +13,7 @@ public static class InfrastructureService
                 npgsql => npgsql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.GetName().Name)
             )
         );
-
+        BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
         // MongoDB
         services.AddSingleton<IMongoDatabase>(sp =>
         {

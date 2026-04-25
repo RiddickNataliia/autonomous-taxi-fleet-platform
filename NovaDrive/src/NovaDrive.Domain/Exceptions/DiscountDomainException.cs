@@ -8,6 +8,6 @@ public class DiscountDomainException : DomainException
     public const string InvalidType    = "A valid discount type is required.";
     public const string InvalidValue   = "Discount value must be greater than zero.";
     public const string AlreadyExpired = "Expiration date must be in the future.";
-
+    public const string CodeAlreadyExists = "A discount code with this name already exists.";
     public DiscountDomainException(string message) : base(message) { }
 }

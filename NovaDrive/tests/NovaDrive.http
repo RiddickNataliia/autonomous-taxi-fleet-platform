@@ -10,7 +10,7 @@
 # Open in browser, login as PASSENGER, copy code:
 https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@passengerCode = nvyin-Cp6ONWj3OBpgWa8_C_DydJ550c1n2-_QjKpk_U7
+@passengerCode = H99Pz0lzsR23_hWySuFWq5mfoL8NjDasIi9tk0K1CYMW_
 
 ### Get passenger token
 # @name passengerTokenRequest
@@ -25,7 +25,7 @@ grant_type=authorization_code&client_id={{clientId}}&code={{passengerCode}}&code
 # Open in browser, login as ADMIN, copy code:
 https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@adminCode = RJ8QZoqXwG9TA97aosfrIkRAjbysOvSdNIpBzlwskIVqn
+@adminCode = M1b4NisNsfYLzbFXXfhWzkNnrrCKWVY1qZ1PdyA5Hk3m8
 
 ### Get admin token
 # @name adminTokenRequest
@@ -46,11 +46,11 @@ Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "vin": "3FAHP0HA6AR123456",
-  "licensePlate": "6-MNO-987",
-  "modelName": "Ford Fusion",
-  "yearOfManufacture": 2018,
-  "vehicleType": "Standard"
+"vin": "WVWZZZ1JZXW000001",
+"licensePlate": "1-ABC-234",
+"modelName": "Volkswagen Golf",
+"yearOfManufacture": 2021,
+"vehicleType": "Standard"
 }
 
 ###
@@ -250,13 +250,162 @@ GET {{baseUrl}}/api/v1/payments/{{rideId}}
 Authorization: Bearer {{passengerToken}}
 
 
-### Vehicle deactivation and api revocation_________________________
-### Deactivate vehicle
+# ── Step 6: Support Tickets ───────────────────────────────────────────────────
+
+### Create support ticket (passenger)
+# @name createTicket
+POST {{baseUrl}}/api/v1/support
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "subject": "Vehicle arrived late",
+  "description": "The vehicle took 20 minutes longer than estimated to arrive."
+}
+
+###
+@ticketId = {{createTicket.response.body.ticketId}}
+
+### Get my tickets (passenger)
+GET {{baseUrl}}/api/v1/support/my
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### Get specific ticket
+GET {{baseUrl}}/api/v1/support/{{ticketId}}
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Start work on ticket (admin)
+PUT {{baseUrl}}/api/v1/support/{{ticketId}}/start
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Update priority (admin)
+PUT {{baseUrl}}/api/v1/support/{{ticketId}}/priority
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "priority": "High"
+}
+
+###
+
+### Resolve ticket (admin)
+PUT {{baseUrl}}/api/v1/support/{{ticketId}}/resolve
+Authorization: Bearer {{adminToken}}
+
+# ── Step 7: Discount Codes ────────────────────────────────────────────────────
+
+###
+
+### Create percentage discount code (admin)
+# @name createDiscount
+POST {{baseUrl}}/api/v1/discounts
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "code": "SUMMER24",
+  "type": "Percentage",
+  "value": 15.0,
+  "expirationDate": "2027-01-01T00:00:00Z",
+  "minimumRideValue": 10.00
+}
+
+###
+@discountId = {{createDiscount.response.body.id}}
+
+### Get discount code by code string
+GET {{baseUrl}}/api/v1/discounts/SUMMER26
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Create flat discount code (admin)
+POST {{baseUrl}}/api/v1/discounts
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "code": "WELCOME15",
+  "type": "Flat",
+  "value": 15.00,
+  "expirationDate": "2027-01-01T00:00:00Z",
+  "minimumRideValue": 10.00
+}
+
+###
+
+### Deactivate SUMMER26 discount code (admin)
+DELETE {{baseUrl}}/api/v1/discounts/{{discountId}}
+Authorization: Bearer {{adminToken}}
+
+# ── Step 8: Telemetry & Diagnostics ──────────────────────────────────────────
+
+###
+
+### Send telemetry (vehicle)
+POST {{baseUrl}}/api/v1/telemetry
+X-Vehicle-Id: {{vehicleId}}
+X-Api-Key: {{vehicleApiKey}}
+Content-Type: application/json
+
+{
+  "latitude": 50.8503,
+  "longitude": 4.3517,
+  "speedKmh": 45.5,
+  "batteryPercentage": 82,
+  "hardwareTemperature": 38.2
+}
+
+###
+
+### Get telemetry by vehicle (admin)
+GET {{baseUrl}}/api/v1/telemetry/{{vehicleId}}?limit=10
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Report sensor diagnostic (vehicle)
+POST {{baseUrl}}/api/v1/diagnostics
+X-Vehicle-Id: {{vehicleId}}
+X-Api-Key: {{vehicleApiKey}}
+Content-Type: application/json
+
+{
+  "sensorType": "Lidar",
+  "errorCode": "LIDAR-001",
+  "severity": "Warning",
+  "rawSensorData": "{\"signal_strength\": 0.3, \"range\": 45.2}"
+}
+
+###
+
+### Get diagnostics by vehicle (admin)
+GET {{baseUrl}}/api/v1/diagnostics/{{vehicleId}}
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Get diagnostics by severity (admin)
+GET {{baseUrl}}/api/v1/diagnostics/severity/Warning
+Authorization: Bearer {{adminToken}}
+
+# ── Step 9: Cleanup ───────────────────────────────────────────────────────────
+
+###
+
+### Deactivate vehicle (admin)
 PUT {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/deactivate
 Authorization: Bearer {{adminToken}}
 
 ###
 
-### Revoke API key
+### Revoke API key (admin)
 DELETE {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/api-key
 Authorization: Bearer {{adminToken}}

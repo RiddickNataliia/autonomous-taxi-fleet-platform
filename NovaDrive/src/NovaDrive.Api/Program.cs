@@ -79,6 +79,12 @@ try
             policy.AllowAnyOrigin()
                   .AllowAnyMethod()
                   .AllowAnyHeader()));
+                  
+    //  JSON options (e.g. for serializing enums as strings in API responses)
+    builder.Services.ConfigureHttpJsonOptions(options =>
+    {
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
     //  Build 
     var app = builder.Build();
@@ -162,6 +168,18 @@ try
     //   v1.MapPaymentEndpoints
     v1.MapGroup("/payments")
     .MapPaymentEndpoints();
+
+    v1.MapGroup("/telemetry")
+    .MapTelemetryEndpoints();
+
+    v1.MapGroup("/diagnostics").
+    MapSensorDiagnosticEndpoints();
+    
+    v1.MapGroup("/support")
+    .MapSupportTicketEndpoints();
+    
+    v1.MapGroup("/discounts")
+    .MapDiscountCodeEndpoints();
 
     
     

@@ -21,5 +21,8 @@ global using QuestPDF.Infrastructure;
 global using Microsoft.Extensions.Logging;
 global using System.Net.Mail;
 global using MimeKit;
+global using MongoDB.Bson.Serialization;
+global using MongoDB.Bson.Serialization.Serializers;
+global using MongoDB.Bson;
 
 

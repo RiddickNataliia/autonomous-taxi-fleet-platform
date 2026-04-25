@@ -23,15 +23,10 @@ public sealed class SupportService : ISupportService
     public async Task<TicketResponse> CreateTicket(
         CreateTicketRequest request, CancellationToken ct = default)
     {
-        if (!Enum.TryParse<TicketPriority>(request.Priority, ignoreCase: true, out var priority)
-            || priority == TicketPriority.Unknown)
-            throw new SupportDomainException(SupportDomainException.InvalidPriority);
-
         var ticket = SupportTicket.Create(
             request.PassengerId,
             request.Subject,
-            request.Description,
-            priority);
+            request.Description);
 
         await _ticketRepo.Add(ticket, ct);
         await _unitOfWork.SaveChanges(ct);
