@@ -1,5 +1,6 @@
 global using Microsoft.Extensions.DependencyInjection;
 global using FluentValidation;
+global using Microsoft.Extensions.Logging;
 
 global using NovaDrive.Domain.Entities;
 global using NovaDrive.Domain.Enums;

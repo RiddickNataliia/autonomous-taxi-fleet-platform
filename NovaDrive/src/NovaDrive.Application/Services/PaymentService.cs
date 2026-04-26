@@ -15,6 +15,7 @@ public sealed class PaymentService : IPaymentService
     private readonly IUnitOfWork            _unitOfWork;
     private readonly IInvoiceService        _invoiceService;
     private readonly IEmailService          _emailService;
+    private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
         ITransactionRepository transactionRepo,
@@ -23,7 +24,8 @@ public sealed class PaymentService : IPaymentService
         IPaymentGateway        gateway,
         IUnitOfWork            unitOfWork,
         IInvoiceService        invoiceService,
-        IEmailService          emailService)
+        IEmailService          emailService,
+        ILogger<PaymentService> logger)
     {
         _transactionRepo = transactionRepo;
         _rideRepo        = rideRepo;
@@ -32,6 +34,7 @@ public sealed class PaymentService : IPaymentService
         _unitOfWork      = unitOfWork;
         _invoiceService  = invoiceService;
         _emailService    = emailService;
+        _logger           = logger;
     }
 
     public async Task<TransactionResponse> ProcessPayment(
@@ -69,7 +72,7 @@ public sealed class PaymentService : IPaymentService
         if (transaction.Status == TransactionStatus.Successful)
                 {
                     var passenger = await _passengerRepo.GetByIdWithUser(ride.PassengerId, ct);
-                    Console.WriteLine($"Passenger: {passenger?.FullName}, User: {passenger?.User?.Email}");
+                    _logger.LogDebug("Processing invoice for passenger {Name} ({Email})", passenger?.FullName, passenger?.User?.Email);
                     if (passenger?.User is not null)
                     {
                         try
@@ -97,11 +100,11 @@ public sealed class PaymentService : IPaymentService
                                 invoiceBytes,
                                 ct);
 
-                            Console.WriteLine("Invoice sent successfully");
+                            _logger.LogInformation("Invoice sent successfully to {Email}", passenger?.User?.Email);
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Invoice error: {ex.Message}\n{ex.StackTrace}");
+                            _logger.LogError(ex, "Failed to generate or send invoice for ride {RideId}", ride.Id);
                         }
                     }
                 }

@@ -28,6 +28,9 @@ jobs:
       - name: Run unit tests
         run: dotnet test NovaDrive/NovaDrive.slnx --no-restore --filter "FullyQualifiedName~UnitTests"
 
+      - name: Run integration tests
+        run: dotnet test NovaDrive/NovaDrive.slnx --no-restore --filter "FullyQualifiedName~IntegrationTests"
+
   docker:
     runs-on: ubuntu-latest
     needs: build-and-test
