@@ -43,9 +43,9 @@ public class ExceptionHandlingMiddleware
     {
         var (statusCode, title) = ex switch
         {
-            DomainException                => (StatusCodes.Status422UnprocessableEntity, "Business rule violation"),
-            KeyNotFoundException           => (StatusCodes.Status404NotFound,            "Resource not found"),
-            UnauthorizedAccessException    => (StatusCodes.Status403Forbidden,           "Access denied"),
+            DomainException => (StatusCodes.Status422UnprocessableEntity, "Business rule violation"),
+            System.Collections.Generic.KeyNotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
+            UnauthorizedAccessException => (StatusCodes.Status403Forbidden,           "Access denied"),
             _                              => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
         };
 

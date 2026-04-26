@@ -12,6 +12,8 @@ global using Serilog.Events;
 global using System.Text.Json.Serialization;
 global using Grpc.Core;
 global using NovaDrive.Api.Grpc;
+global using HotChocolate.Authorization;
+global using NovaDrive.Api.GraphQL;
 
 
 global using NovaDrive.Domain.Interfaces;

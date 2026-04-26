@@ -10,7 +10,7 @@
 # Open in browser, login as PASSENGER, copy code:
 https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@passengerCode = H99Pz0lzsR23_hWySuFWq5mfoL8NjDasIi9tk0K1CYMW_
+@passengerCode = PKONA_PhdRkfex0wuBoHSYAHkFV_9xZGeHPo1TejVKEXy
 
 ### Get passenger token
 # @name passengerTokenRequest
@@ -25,7 +25,7 @@ grant_type=authorization_code&client_id={{clientId}}&code={{passengerCode}}&code
 # Open in browser, login as ADMIN, copy code:
 https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@adminCode = M1b4NisNsfYLzbFXXfhWzkNnrrCKWVY1qZ1PdyA5Hk3m8
+@adminCode = jjl1kJrY6wvc82zjUbfBxVQVtX1cz4SdJyUJDGynBy-qh
 
 ### Get admin token
 # @name adminTokenRequest
@@ -409,3 +409,49 @@ Authorization: Bearer {{adminToken}}
 ### Revoke API key (admin)
 DELETE {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/api-key
 Authorization: Bearer {{adminToken}}
+
+# ── GraphQL ───────────────────────────────────────────────────────────────────
+# GraphQL is used for admin dashboard queries
+
+### GraphQL — fleet overview
+POST {{baseUrl}}/graphql
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "query": "{ vehicles { id modelName licensePlate status type } }" }
+
+###
+
+### GraphQL — active vehicles only
+POST {{baseUrl}}/graphql
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "query": "{ vehicles(status: ACTIVE) { id modelName licensePlate battery { percentage } currentLocation { latitude longitude } } }" }
+
+###
+
+### GraphQL — all rides
+POST {{baseUrl}}/graphql
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "query": "{ rides { id departure destination status finalPrice passengerId vehicleId } }" }
+
+###
+
+### GraphQL — all passengers
+POST {{baseUrl}}/graphql
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "query": "{ passengers { id fullName loyaltyPoints preferredPaymentMethod } }" }
+
+###
+
+### GraphQL — telemetry for vehicle
+POST {{baseUrl}}/graphql
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "query": "{ telemetry(vehicleId: \"22b21e43-0151-4ef4-8ea6-1e37d89d5607\", limit: 5) { timestamp speed batteryPercentage gpsCoordinates { latitude longitude } } }" }

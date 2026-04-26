@@ -4,7 +4,9 @@
     <ProjectReference Include="..\NovaDrive.Infrastructure\NovaDrive.Infrastructure.csproj" />
     <ProjectReference Include="..\NovaDrive.Application\NovaDrive.Application.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <InternalsVisibleTo Include="NovaDrive.Tests" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
@@ -19,6 +21,8 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.7" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.76.0" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.15" />
+    <PackageReference Include="HotChocolate.Data" Version="15.1.15" />
   </ItemGroup>
   <ItemGroup>
     <Protobuf Include="Protos\telemetry.proto" GrpcServices="Server" />

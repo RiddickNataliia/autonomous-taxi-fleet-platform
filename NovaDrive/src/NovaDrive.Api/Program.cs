@@ -27,6 +27,13 @@ try
     //  Application services + FluentValidation 
     builder.Services.AddApplication();
 
+    // GraphQL — admin dashboard queries via HotChocolate
+    builder.Services
+        .AddGraphQLServer()
+        .AddQueryType<Query>()
+        .AddFiltering()
+        .AddSorting();
+
     // gRPC — telemetry ingestion from vehicles
     builder.Services.AddGrpc(options =>
     {
@@ -127,6 +134,10 @@ try
 
     // gRPC endpoint — vehicles stream telemetry over HTTP/2
     app.MapGrpcService<TelemetryGrpcService>();
+
+    // GraphQL endpoint — Banana Cake Pop UI available at /graphql in Development
+    app.MapGraphQL()
+        .RequireAuthorization("admin:fleet");
 
     // Callback endpoint for Auth0 Authorization Code flow testing
     app.MapGet("/callback", (string? code, string? state, string? error, string? error_description) =>
@@ -240,3 +251,5 @@ static bool HasScopeOrPermission(ClaimsPrincipal user, string required)
     }
     return false;
 }
+
+public partial class Program { }

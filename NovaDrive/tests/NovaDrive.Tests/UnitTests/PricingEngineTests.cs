@@ -257,13 +257,11 @@ public class PricingEngineTests
     [Fact]
     public void StandardRide_LoyaltyDiscountCappedAt20Percent()
     {
-        // Base fare: €19.50
-        // 10000 points = potential €100 discount
-        // Loyalty cap: €19.50 × 0.20 = €3.90 — capped at €3.90
-        // Points spent: (3.90) × 100 = 390
-        // Net after loyalty: €19.50 - €3.90 = €15.60
-        // VAT: €15.60 × 0.21 = €3.276 → €3.28
-        // Gross: €15.60 + €3.28 = €18.88
+        // Loyalty cap: €19.50 × 0.20 = €3.90 → floored to €3.00 (whole euros only)
+        // maxAllowedDiscount: €19.50 - €5.00 = €14.50 (minimum fare constraint)
+        // actualLoyaltyDiscount: min(€100, €3.90, €14.50) → floor = €3.00
+        // Points spent: 3.00 × 100 = 300
+        // Net after loyalty: €19.50 - €3.00 = €16.50
         var result = _engine.CalculateFinalPrice(
             distanceKm:      10.0,
             durationMinutes: 20,
@@ -273,11 +271,11 @@ public class PricingEngineTests
             code:            null
         );
 
-        Assert.Equal(15.60m, result.NetAmount);
-        Assert.Equal(3.28m,  result.VatAmount);
-        Assert.Equal(18.88m, result.TotalGross);
-        Assert.Equal(3.90m,  result.LoyaltyDiscountApplied);
-        Assert.Equal(390,    result.PointsUsed);
+        Assert.Equal(16.50m, result.NetAmount);
+        Assert.Equal(3.47m,  result.VatAmount);
+        Assert.Equal(19.97m, result.TotalGross);
+        Assert.Equal(3.00m,  result.LoyaltyDiscountApplied);
+        Assert.Equal(300,    result.PointsUsed);
     }
 
     [Fact]

@@ -19,6 +19,9 @@
     <PackageReference Include="MimeKit" Version="4.16.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="NovaDrive.Tests" />
+  </ItemGroup>
   
 
   <PropertyGroup>

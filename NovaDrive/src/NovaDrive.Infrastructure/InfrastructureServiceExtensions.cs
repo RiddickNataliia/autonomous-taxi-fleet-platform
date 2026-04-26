@@ -13,25 +13,46 @@ public static class InfrastructureService
                 npgsql => npgsql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.GetName().Name)
             )
         );
-        BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
-
-        BsonClassMap.RegisterClassMap<GpsLocation>(cm =>
+        try
         {
-            cm.MapCreator(g => new GpsLocation(g.Latitude, g.Longitude));
-            cm.MapProperty(g => g.Latitude);
-            cm.MapProperty(g => g.Longitude);
-        });
-
-        BsonClassMap.RegisterClassMap<Telemetry>(cm =>
+            BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+        }
+        catch (BsonSerializationException)
         {
-            cm.AutoMap();
-            cm.GetMemberMap(t => t.BatteryPercentage)
+            // Already registered — ignore
+        }
+
+        try
+        {
+            BsonClassMap.RegisterClassMap<GpsLocation>(cm =>
+            {
+                cm.MapCreator(g => new GpsLocation(g.Latitude, g.Longitude));
+                cm.MapProperty(g => g.Latitude);
+                cm.MapProperty(g => g.Longitude);
+            });
+        }
+        catch (ArgumentException)
+        {
+            // Already registered — ignore
+        }
+
+        try
+        {
+            BsonClassMap.RegisterClassMap<Telemetry>(cm =>
+            {
+                cm.AutoMap();
+                cm.GetMemberMap(t => t.BatteryPercentage)
                 .SetSerializer(new Int32Serializer(BsonType.Int32));
             cm.GetMemberMap(t => t.Speed)
                 .SetSerializer(new DoubleSerializer(BsonType.Double));
             cm.GetMemberMap(t => t.InternalTemperature)
                 .SetSerializer(new DoubleSerializer(BsonType.Double));
         });
+        }
+        catch (ArgumentException)
+        {
+            // Already registered — ignore
+        }
 
 
         // MongoDB

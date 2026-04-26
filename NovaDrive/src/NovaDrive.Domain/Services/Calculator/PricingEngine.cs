@@ -70,10 +70,11 @@ public class PricingEngine : IPricingEngine
             currentFare *= NightSurcharge;
 
         // STEP 4: Loyalty discount — €1 per 100 points, capped at 20% of fare
+        // Also capped so fare never drops below minimum
         decimal potentialLoyaltyDiscount = Math.Floor(availablePoints / PointsPerEuro) * 1.00m;
-        decimal loyaltyCap = currentFare * LoyaltyCapPercent;
-        decimal actualLoyaltyDiscount = Math.Min(potentialLoyaltyDiscount, loyaltyCap);
-        int pointsSpent = (int)(actualLoyaltyDiscount * PointsPerEuro);
+        decimal loyaltyCap               = currentFare * LoyaltyCapPercent;
+        decimal maxAllowedDiscount       = Math.Max(0m, currentFare - MinimumFare);
+        decimal actualLoyaltyDiscount    = Math.Floor(Math.Min(potentialLoyaltyDiscount, Math.Min(loyaltyCap, maxAllowedDiscount)));
 
         currentFare -= actualLoyaltyDiscount;
 
@@ -89,23 +90,20 @@ public class PricingEngine : IPricingEngine
         currentFare = Math.Max(0m, currentFare);
         decimal netAmount = Math.Max(MinimumFare, Math.Round(currentFare, 2, MidpointRounding.AwayFromZero));
 
-        //realculate actual loyalty saving after minimum fare is applies
-        decimal actualNetBeforeMinimum = Math.Round(currentFare, 2, MidpointRounding.AwayFromZero);
-        decimal actualLoyaltySaving = actualLoyaltyDiscount - Math.Max(0m, MinimumFare - actualNetBeforeMinimum);
-        actualLoyaltySaving = Math.Max(0m, actualLoyaltySaving);
-        pointsSpent = (int)(Math.Floor(actualLoyaltySaving) * PointsPerEuro);
+        // Points consumed = exactly what was discounted (already capped correctly above)
+        int pointsSpent = (int)(actualLoyaltyDiscount * PointsPerEuro);
 
-        // STEP 7: VAT on top of the net amount
-        decimal vatAmount = Math.Round(netAmount * VatRate, 2, MidpointRounding.AwayFromZero);
+        // STEP 7: VAT
+        decimal vatAmount  = Math.Round(netAmount * VatRate, 2, MidpointRounding.AwayFromZero);
         decimal totalGross = netAmount + vatAmount;
 
         return new PricingResult(
-            NetAmount: netAmount,
-            VatAmount: vatAmount,
-            TotalGross: totalGross,
-            LoyaltyDiscountApplied: actualLoyaltySaving,
-            CodeDiscountApplied: codeDiscount,
-            PointsUsed: pointsSpent
+            NetAmount:              netAmount,
+            VatAmount:              vatAmount,
+            TotalGross:             totalGross,
+            LoyaltyDiscountApplied: actualLoyaltyDiscount,
+            CodeDiscountApplied:    codeDiscount,
+            PointsUsed:             pointsSpent
         );
     }
 }
