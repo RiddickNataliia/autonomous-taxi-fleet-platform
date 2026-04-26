@@ -31,10 +31,11 @@ services:
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   api:
     build:
@@ -42,7 +43,8 @@ services:
       dockerfile: src/NovaDrive.Api/Dockerfile
     container_name: novadrive-api
     ports:
-      - "8080:8080"
+      - "8080:8080"   # REST / HTTP1.1
+      - "8081:8081"   # gRPC / HTTP2
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=novadrive;Username=postgres;Password=postgres
@@ -53,9 +55,44 @@ services:
       - Email__SmtpPort=1025
       - Email__FromAddress=noreply@novadrive.com
       - Email__FromName=NovaDrive
+      - Kestrel__Endpoints__Http__Url=http://+:8080
+      - Kestrel__Endpoints__Http__Protocols=Http1
+      - Kestrel__Endpoints__Grpc__Url=http://+:8081
+      - Kestrel__Endpoints__Grpc__Protocols=Http2
     depends_on:
       postgres:
         condition: service_healthy
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  simulator:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    container_name: novadrive-simulator
+    environment:
+      - API_BASE_URL=http://novadrive-api:8080
+      - GRPC_BASE_URL=http://novadrive-api:8081
+    depends_on:
+      api:
+        condition: service_healthy
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: novadrive-mongo-express
+    ports:
+      - "8082:8081"
+    environment:
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin
+      - ME_CONFIG_MONGODB_SERVER=mongo
+    depends_on:
       mongo:
         condition: service_healthy
 

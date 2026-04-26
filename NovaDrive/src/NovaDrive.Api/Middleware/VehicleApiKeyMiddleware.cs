@@ -3,15 +3,9 @@ namespace NovaDrive.Api.Middleware;
 /// <summary>
 /// Validates the X-Api-Key header for vehicle-facing endpoints.
 /// Runs before UseAuthentication so vehicle requests bypass Auth0 entirely.
-///
-/// Protected paths:
-///   POST /api/v1/telemetry
-///   POST /api/v1/diagnostics
-///
 /// On success: attaches the authenticated Vehicle to HttpContext.Items["AuthenticatedVehicle"]
 /// so endpoints can use it without a second database round-trip.
-///
-/// On failure: short-circuits with 401 before any endpoint logic runs.
+/// On failure: 401 before any endpoint logic runs.
 /// </summary>
 public class VehicleApiKeyMiddleware
 {
@@ -102,7 +96,6 @@ public class VehicleApiKeyMiddleware
         }
 
         // BCrypt.Verify compares the plain key against the stored hash
-        // This is the only place BCrypt is called in the middleware layer
         var keyIsValid = BCrypt.Net.BCrypt.Verify(providedKey!, vehicle.ApiKeyHash);
 
         if (!keyIsValid)

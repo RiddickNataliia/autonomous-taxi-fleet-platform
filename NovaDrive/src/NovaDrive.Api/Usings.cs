@@ -10,6 +10,8 @@ global using NovaDrive.Infrastructure;
 global using Serilog;
 global using Serilog.Events;
 global using System.Text.Json.Serialization;
+global using Grpc.Core;
+global using NovaDrive.Api.Grpc;
 
 
 global using NovaDrive.Domain.Interfaces;

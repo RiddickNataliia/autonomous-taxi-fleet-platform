@@ -1,13 +1,17 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Grpc.Net.Client;
+using NovaDrive.Api.Grpc;
+
+const bool UseGrpc = true; // flip to false to fall back to REST
 
 // Configuration
-
-const string ApiBaseUrl             = "http://localhost:5154";
-const int    TelemetryIntervalMs    = 3_000;
-const int    DiagnosticIntervalMs   = 15_000;
-const double DiagnosticFaultChance  = 0.10;
+var apiBaseUrl  = Environment.GetEnvironmentVariable("API_BASE_URL")  ?? "http://localhost:8080";
+var grpcBaseUrl = Environment.GetEnvironmentVariable("GRPC_BASE_URL") ?? "http://localhost:8081";
+const int    TelemetryIntervalMs   = 3_000;
+const int    DiagnosticIntervalMs  = 15_000;
+const double DiagnosticFaultChance = 0.10;
 
 var vehicles = new[]
 {
@@ -26,7 +30,7 @@ if (vehicles[0].ApiKey == "PASTE-PLAIN-TEXT-KEY-HERE")
     return;
 }
 
-// JSON 
+// JSON
 
 var json = new JsonSerializerOptions
 {
@@ -35,10 +39,10 @@ var json = new JsonSerializerOptions
     Converters             = { new JsonStringEnumConverter() },
 };
 
-// Wait for API 
+// Wait for API
 
-Console.WriteLine($"Waiting for API at {ApiBaseUrl}...");
-using var healthClient = new HttpClient { BaseAddress = new Uri(ApiBaseUrl) };
+Console.WriteLine($"Waiting for API at {apiBaseUrl}...");
+using var healthClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
 
 var deadline = DateTime.UtcNow.AddSeconds(30);
 while (DateTime.UtcNow < deadline)
@@ -67,7 +71,7 @@ static (double Lat, double Lon)[] BuildRoute(double cLat, double cLon, double km
 
 var route = BuildRoute(cLat: 51.0543, cLon: 3.7174, km: 1.5, steps: 120);
 
-// Sensor fault data 
+// Sensor fault data
 
 var sensorErrors = new Dictionary<string, string[]>
 {
@@ -83,37 +87,85 @@ string RandomSeverity()
     return roll < 40 ? "Info" : roll < 75 ? "Warning" : roll < 95 ? "Error" : "Critical";
 }
 
-// Run one vehicle
+// Shared diagnostic sender (used by both REST and gRPC vehicle runners)
+
+async Task SendDiagnostic(Guid vehicleId, string apiKey, double speed, double lat, double lon,
+    string tag, CancellationToken ct)
+{
+    using var client = new HttpClient(new ApiKeyHandler(vehicleId, apiKey))
+    {
+        BaseAddress = new Uri(apiBaseUrl)
+    };
+
+    var sensors   = sensorErrors.Keys.ToArray();
+    var sensor    = sensors[Random.Shared.Next(sensors.Length)];
+    var errors    = sensorErrors[sensor];
+    var errorCode = errors[Random.Shared.Next(errors.Length)];
+    var severity  = RandomSeverity();
+
+    var rawData = JsonSerializer.Serialize(new
+    {
+        sensorId     = $"{sensor.ToUpperInvariant()}_01",
+        errorCode,
+        value        = Math.Round(Random.Shared.NextDouble() * 100, 2),
+        threshold    = Math.Round(60 + Random.Shared.NextDouble() * 30, 2),
+        timestamp    = DateTime.UtcNow.ToString("o"),
+        vehicleSpeed = Math.Round(speed, 1),
+        location     = new { lat, lon },
+    });
+
+    var diagnostic = new
+    {
+        vehicleId,
+        sensorType    = sensor,
+        errorCode,
+        severity,
+        rawSensorData = rawData,
+    };
+
+    try
+    {
+        var r = await client.PostAsJsonAsync("/api/v1/diagnostics", diagnostic, json, ct);
+        if (r.IsSuccessStatusCode)
+            Log(tag, ConsoleColor.Yellow,
+                $"Diagnostic  sensor={sensor,-6} code={errorCode,-30} severity={severity}");
+        else
+            Log(tag, ConsoleColor.Red, $"Diagnostic rejected — HTTP {(int)r.StatusCode}");
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+        Log(tag, ConsoleColor.Red, $"Diagnostic error — {ex.Message}");
+    }
+}
+
+// REST vehicle runner
 
 async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
 {
     var tag = vehicleId.ToString()[..8];
 
-    // Each vehicle gets its own HttpClient that auto-injects auth headers
     using var client = new HttpClient(new ApiKeyHandler(vehicleId, apiKey))
     {
-        BaseAddress = new Uri(ApiBaseUrl)
+        BaseAddress = new Uri(apiBaseUrl)
     };
 
-    var routeIndex        = Random.Shared.Next(route.Length); // stagger start position
-    var battery           = 100;
-    var speed             = 50.0;
-    var temperature       = 25.0;
-    var lastDiagnosticAt  = DateTime.UtcNow;
+    var routeIndex       = Random.Shared.Next(route.Length);
+    var battery          = 100;
+    var speed            = 50.0;
+    var temperature      = 25.0;
+    var lastDiagnosticAt = DateTime.UtcNow;
 
-    Log(tag, ConsoleColor.Green, $"Started — vehicle {vehicleId}");
+    Log(tag, ConsoleColor.Green, $"Started (REST) — vehicle {vehicleId}");
 
     while (!ct.IsCancellationRequested)
     {
-        // Advance state
-        routeIndex = (routeIndex + 1) % route.Length;
+        routeIndex  = (routeIndex + 1) % route.Length;
         speed       = Math.Clamp(speed + Random.Shared.NextDouble() * 10 - 5, 30, 80);
         temperature = Math.Clamp(temperature + (Random.Shared.NextDouble() - 0.5), 20, 45);
         battery     = battery <= 10 ? 95 : Math.Max(0, battery - Random.Shared.Next(0, 2));
 
         var (lat, lon) = route[routeIndex];
 
-        // Telemetry
         var telemetry = new
         {
             latitude            = lat,
@@ -132,8 +184,7 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
             else
             {
                 var body = await r.Content.ReadAsStringAsync(ct);
-                Log(tag, ConsoleColor.Yellow,
-                    $"Telemetry rejected — HTTP {(int)r.StatusCode} — {body}");
+                Log(tag, ConsoleColor.Yellow, $"Telemetry rejected — HTTP {(int)r.StatusCode} — {body}");
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -141,65 +192,95 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
             Log(tag, ConsoleColor.Red, $"Telemetry error — {ex.Message}");
         }
 
-        //  Sensor diagnostics 
         if ((DateTime.UtcNow - lastDiagnosticAt).TotalMilliseconds >= DiagnosticIntervalMs)
         {
             lastDiagnosticAt = DateTime.UtcNow;
-
             if (Random.Shared.NextDouble() <= DiagnosticFaultChance)
-            {
-                var sensors   = sensorErrors.Keys.ToArray();
-                var sensor    = sensors[Random.Shared.Next(sensors.Length)];
-                var errors    = sensorErrors[sensor];
-                var errorCode = errors[Random.Shared.Next(errors.Length)];
-                var severity  = RandomSeverity();
-
-                var rawData = JsonSerializer.Serialize(new
-                {
-                    sensorId     = $"{sensor.ToUpperInvariant()}_01",
-                    errorCode,
-                    value        = Math.Round(Random.Shared.NextDouble() * 100, 2),
-                    threshold    = Math.Round(60 + Random.Shared.NextDouble() * 30, 2),
-                    timestamp    = DateTime.UtcNow.ToString("o"),
-                    vehicleSpeed = Math.Round(speed, 1),
-                    location     = new { lat, lon },
-                });
-
-                var diagnostic = new
-                {
-                    vehicleId,
-                    sensorType    = sensor,
-                    errorCode,
-                    severity,
-                    rawSensorData = rawData,
-                };
-
-                try
-                {
-                    var r = await client.PostAsJsonAsync("/api/v1/diagnostics", diagnostic, json, ct);
-                    if (r.IsSuccessStatusCode)
-                        Log(tag, ConsoleColor.Yellow,
-                            $"Diagnostic  sensor={sensor,-6} code={errorCode,-30} severity={severity}");
-                    else
-                        Log(tag, ConsoleColor.Red,
-                            $"Diagnostic rejected — HTTP {(int)r.StatusCode}");
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    Log(tag, ConsoleColor.Red, $"Diagnostic error — {ex.Message}");
-                }
-            }
+                await SendDiagnostic(vehicleId, apiKey, speed, lat, lon, tag, ct);
             else
-            {
                 Log(tag, ConsoleColor.DarkGray, "Sensor check OK");
-            }
         }
 
         await Task.Delay(TelemetryIntervalMs, ct);
     }
 }
 
-// Start all vehicles concurrently 
+// gRPC vehicle runner
+
+async Task RunVehicleGrpc(Guid vehicleId, string apiKey, CancellationToken ct)
+{
+    var tag = vehicleId.ToString()[..8];
+
+    using var channel = GrpcChannel.ForAddress(grpcBaseUrl, new GrpcChannelOptions
+    {
+        HttpHandler = new HttpClientHandler()
+    });
+    var grpcClient = new TelemetryIngest.TelemetryIngestClient(channel);
+
+    using var call = grpcClient.StreamTelemetry(cancellationToken: ct);
+
+    var routeIndex       = Random.Shared.Next(route.Length);
+    var battery          = 100;
+    var speed            = 50.0;
+    var temperature      = 25.0;
+    var lastDiagnosticAt = DateTime.UtcNow;
+
+    Log(tag, ConsoleColor.Green, $"Started (gRPC) — vehicle {vehicleId}");
+
+    while (!ct.IsCancellationRequested)
+    {
+        routeIndex  = (routeIndex + 1) % route.Length;
+        speed       = Math.Clamp(speed + Random.Shared.NextDouble() * 10 - 5, 30, 80);
+        temperature = Math.Clamp(temperature + (Random.Shared.NextDouble() - 0.5), 20, 45);
+        battery     = battery <= 10 ? 95 : Math.Max(0, battery - Random.Shared.Next(0, 2));
+
+        var (lat, lon) = route[routeIndex];
+
+        try
+        {
+            await call.RequestStream.WriteAsync(new TelemetryFrame
+            {
+                VehicleId           = vehicleId.ToString(),
+                ApiKey              = apiKey,
+                Latitude            = lat,
+                Longitude           = lon,
+                SpeedKmh            = Math.Round(speed, 1),
+                BatteryPercentage   = battery,
+                HardwareTemperature = Math.Round(temperature, 1),
+            }, ct);
+
+            if (await call.ResponseStream.MoveNext(ct))
+            {
+                var ack = call.ResponseStream.Current;
+                if (ack.Accepted)
+                    Log(tag, ConsoleColor.Cyan,
+                        $"gRPC ack  lat={lat:F4} lon={lon:F4}  speed={speed:F1} km/h  battery={battery}%");
+                else
+                    Log(tag, ConsoleColor.Yellow, $"gRPC rejected — {ack.Message}");
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Log(tag, ConsoleColor.Red, $"gRPC error — {ex.Message}");
+        }
+
+        // Diagnostics always go over REST — infrequent, no need for gRPC here
+        if ((DateTime.UtcNow - lastDiagnosticAt).TotalMilliseconds >= DiagnosticIntervalMs)
+        {
+            lastDiagnosticAt = DateTime.UtcNow;
+            if (Random.Shared.NextDouble() <= DiagnosticFaultChance)
+                await SendDiagnostic(vehicleId, apiKey, speed, lat, lon, tag, ct);
+            else
+                Log(tag, ConsoleColor.DarkGray, "Sensor check OK");
+        }
+
+        await Task.Delay(TelemetryIntervalMs, ct);
+    }
+
+    await call.RequestStream.CompleteAsync();
+}
+
+// Start all vehicles concurrently
 
 using var cts = new CancellationTokenSource();
 
@@ -210,15 +291,19 @@ Console.CancelKeyPress += (_, e) =>
     cts.Cancel();
 };
 
+var runner = UseGrpc
+    ? (Func<Guid, string, CancellationToken, Task>)RunVehicleGrpc
+    : RunVehicle;
+
 try
 {
-    await Task.WhenAll(vehicles.Select(v => RunVehicle(v.VehicleId, v.ApiKey, cts.Token)));
+    await Task.WhenAll(vehicles.Select(v => runner(v.VehicleId, v.ApiKey, cts.Token)));
 }
 catch (OperationCanceledException) { }
 
 Console.WriteLine("Simulator stopped.");
 
-//  Helpers 
+// Helpers
 
 static void Log(string tag, ConsoleColor color, string message)
 {
@@ -228,7 +313,6 @@ static void Log(string tag, ConsoleColor color, string message)
     Console.WriteLine(message);
 }
 
-// DelegatingHandler that injects X-Api-Key and X-Vehicle-Id on every request
 sealed class ApiKeyHandler(Guid vehicleId, string apiKey) : DelegatingHandler(new HttpClientHandler())
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage req, CancellationToken ct)

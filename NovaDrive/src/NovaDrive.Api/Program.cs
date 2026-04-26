@@ -1,4 +1,4 @@
-//  Bootstrap logger 
+//  Bootstrap logger to capture startup logs 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .WriteTo.Console()
@@ -26,6 +26,12 @@ try
 
     //  Application services + FluentValidation 
     builder.Services.AddApplication();
+
+    // gRPC — telemetry ingestion from vehicles
+    builder.Services.AddGrpc(options =>
+    {
+        options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    });
 
     // AUTH0 AUTHENTICATION
     var auth0Domain = builder.Configuration["Auth0:Domain"]
@@ -118,6 +124,9 @@ try
 
     // ENDPOINTS
     app.MapHealthChecks("/health");
+
+    // gRPC endpoint — vehicles stream telemetry over HTTP/2
+    app.MapGrpcService<TelemetryGrpcService>();
 
     // Callback endpoint for Auth0 Authorization Code flow testing
     app.MapGet("/callback", (string? code, string? state, string? error, string? error_description) =>

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option csharp_namespace = "NovaDrive.Api.Grpc";
+
+package telemetry;
+
+service TelemetryIngest {
+  // Vehicle streams telemetry frames; server acknowledges each one
+  rpc StreamTelemetry (stream TelemetryFrame) returns (stream TelemetryAck);
+}
+
+message TelemetryFrame {
+  string vehicle_id          = 1;
+  string api_key             = 2;
+  double latitude            = 3;
+  double longitude           = 4;
+  double speed_kmh           = 5;
+  int32  battery_percentage  = 6;
+  double hardware_temperature = 7;
+}
+
+message TelemetryAck {
+  bool   accepted  = 1;
+  string message   = 2;
+}
