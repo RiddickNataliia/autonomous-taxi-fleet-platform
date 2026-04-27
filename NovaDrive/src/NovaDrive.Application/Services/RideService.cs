@@ -10,6 +10,7 @@ public interface IRideService
     Task<IEnumerable<RideResponse>> GetRidesByPassenger(Guid passengerId, CancellationToken ct = default);
     Task<IEnumerable<RideResponse>> GetAllRides(CancellationToken ct = default);
     Task<RideResponse?> GetActiveRide(Guid passengerId, CancellationToken ct = default);
+    Task<RideResponse?> GetPendingRideForVehicle(Guid vehicleId, CancellationToken ct = default);
 }
 public sealed class RideService : IRideService
 {
@@ -48,10 +49,11 @@ public sealed class RideService : IRideService
 
         var activeVehicles    = await _vehicleRepo.GetAllActive(ct);
         var passengerLocation = new GpsLocation(request.PassengerLatitude, request.PassengerLongitude);
-        var vehicle           = _matchingService.FindBestMatch(passengerLocation, activeVehicles, request.EstimatedDistanceKm)
+        var vehicle           = _matchingService.FindBestMatch(passengerLocation, activeVehicles, request.EstimatedDistanceKm, request.PreferredVehicleType)
                                 ?? throw new InvalidOperationException(
-                                    "No available vehicle found within range. Please try again shortly.");
-
+                                    request.PreferredVehicleType is null
+                                        ? "No available vehicle found within range. Please try again shortly."
+                                        : $"No available {request.PreferredVehicleType} vehicle found within range. Try a different type or wait.");
         var ride = new Ride
         {
             PassengerId = request.PassengerId,
@@ -131,6 +133,12 @@ public sealed class RideService : IRideService
     public async Task<RideResponse?> GetActiveRide(Guid passengerId, CancellationToken ct = default)
     {
         var ride = await _rideRepo.GetActiveByPassengerId(passengerId, ct);
+        return ride?.ToResponse();
+    }
+
+    public async Task<RideResponse?> GetPendingRideForVehicle(Guid vehicleId, CancellationToken ct = default)
+    {
+        var ride = await _rideRepo.GetPendingByVehicleId(vehicleId, ct);
         return ride?.ToResponse();
     }
 

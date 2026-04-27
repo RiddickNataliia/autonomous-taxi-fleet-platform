@@ -6,4 +6,5 @@ public interface IRepository<T> where T : class
     Task Add(T entity, CancellationToken cancellationToken = default);
     Task Update(T entity, CancellationToken cancellationToken = default);
     Task Delete(Guid id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<T>> GetAll(CancellationToken cancellationToken = default);
 }

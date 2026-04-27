@@ -28,11 +28,6 @@ internal sealed class RideRepository : BaseRepository<Ride>, IRideRepository
             .OrderByDescending(r => r.RequestTime)
             .ToListAsync(cancellationToken);
 
-    /// <summary>
-    /// Returns all rides in the system. Used by admin dashboard for analytics and reporting.
-    /// </summary>
-    public async Task<IEnumerable<Ride>> GetAll(CancellationToken cancellationToken = default)
-    => await DbSet.ToListAsync(cancellationToken);
 
     /// <summary>
     /// Returns the active ride (status Requested or EnRoute) for a given passenger, or null if they have no active ride.
@@ -43,4 +38,10 @@ internal sealed class RideRepository : BaseRepository<Ride>, IRideRepository
             r => r.PassengerId == passengerId 
             && (r.Status == RideStatus.Requested || r.Status == RideStatus.EnRoute),
             cancellationToken);
+            
+    public async Task<Ride?> GetPendingByVehicleId(Guid vehicleId, CancellationToken cancellationToken = default)
+    => await DbSet
+        .Where(r => r.VehicleId == vehicleId && r.Status == RideStatus.Requested)
+        .OrderBy(r => r.RequestTime)
+        .FirstOrDefaultAsync(cancellationToken);
 }

@@ -12,11 +12,6 @@ internal sealed class PassengerRepository : BaseRepository<Passenger>, IPassenge
             .Include(p => p.User)
             .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
 
-    /// <summary>
-    /// Returns all passengers in the system. This is primarily intended for admin use
-    /// </summary>
-    public async Task<IEnumerable<Passenger>> GetAll(CancellationToken cancellationToken = default)
-    => await DbSet.Include(p => p.User).ToListAsync(cancellationToken);
 
     /// <summary>
     /// Returns the passenger profile along with the associated user account details, based on the passenger's unique identifier.

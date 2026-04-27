@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:5154
+@baseUrl = http://localhost:8080
 @auth0Domain = dev-wcshgsensn2evwsg.us.auth0.com
 @clientId = fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf
 @audience = https://novadrive-api
@@ -25,7 +25,7 @@ grant_type=authorization_code&client_id={{clientId}}&code={{passengerCode}}&code
 # Open in browser, login as ADMIN, copy code:
 https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@adminCode = jjl1kJrY6wvc82zjUbfBxVQVtX1cz4SdJyUJDGynBy-qh
+@adminCode = BnT0s0Na5UkwCDRWa2e9vMjclX-P72MFvFtxAaU4Axhja
 
 ### Get admin token
 # @name adminTokenRequest
@@ -46,10 +46,10 @@ Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-"vin": "JHMCM56557C404453",
-"licensePlate": "2-XYZ-567",
-"modelName": "Honda Accord",
-"yearOfManufacture": 2022,
+"vin": "2T1BURHE5JC123456",
+"licensePlate": "6-STD-789",
+"modelName": "Hyundai Elantra",
+"yearOfManufacture": 2021,
 "vehicleType": "Standard"
 }
 
@@ -132,6 +132,15 @@ GET {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/maintenance
 Authorization: Bearer {{adminToken}}
 
 
+
+### Test GraphQL ride fields
+POST {{baseUrl}}/graphql
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ilc2Z0ZaUEdWbUlMaHVKOUZyMXA2RyJ9.eyJlbWFpbCI6ImFkbWluQG5vdmFkcml2ZS50ZXN0IiwiaXNzIjoiaHR0cHM6Ly9kZXYtd2NzaGdzZW5zbjJldndzZy51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjlkMGZiYjQ3NDFiODQ1OTg4OTBjYTIwIiwiYXVkIjpbImh0dHBzOi8vbm92YWRyaXZlLWFwaSIsImh0dHBzOi8vZGV2LXdjc2hnc2Vuc24yZXZ3c2cudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTc3NzI5NjcyOSwiZXhwIjoxNzc3MzgzMTI5LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiYXpwIjoiZmRUMkRhUklmQ1Y0aFR2UFZhQlVSemV5R0RUMG1IaGYiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbjpkaXNjb3VudHMiLCJhZG1pbjpmbGVldCIsImFkbWluOnN1cHBvcnQiLCJhZG1pbjp1c2VycyJdfQ.CcnAFPKYaUl54dLnFGibEEsUVg_uxnwUb8_W4xEjkjbDTK4-8GD4VhWgW7iH9m0VM_0eOKEwwA1pI4ZhZ8dgh0FDxR7kfExK6dZeRmhl076eUIpMVrl6lKiYTvZ9a1niQ62y8tlKGdkzrObQjHPFG6N4TrM7p_QiZQNh0D3Jgd_mz8u3lE5b8vYV9AQImc3GJeCFBL3Gk0vOwYu8pwb6W_symLZisMkSQ9e9oXzQIZKjdBwtITAOuOPL08BIvaeOXCWU0cWfnCBdteTkjeUVsL-icJyLfy0WgbbNKxv_Fr-ENLaN9Yz74lb7BZ7MujF8HnGlAXRPZwvm4frcd-ecXA
+Content-Type: application/json
+
+{
+  "query": "{ rides { id netAmount vatAmount loyaltyDiscountApplied codeDiscountApplied loyaltyPointsUsed distanceKm durationMinutes isPaid requestTime completedTime } }"
+}
 # Step 3: Passenger Setup ───────────────────────────────────────────────────
 
 ###
@@ -181,7 +190,8 @@ Content-Type: application/json
   "estimatedDistanceKm": 15.5,
   "passengerLatitude": 50.8503,
   "passengerLongitude": 4.3517,
-  "discountCode": null
+  "discountCode": null,
+  "preferredVehicleType": "Standard"
 }
 
 ###

@@ -11,6 +11,9 @@ internal abstract class BaseRepository<T> : IRepository<T> where T : class
         DbSet   = context.Set<T>();
     }
 
+    public async Task<IEnumerable<T>> GetAll(CancellationToken cancellationToken = default)
+    => await DbSet.ToListAsync(cancellationToken);
+
     public async Task<T?> GetById(Guid id, CancellationToken cancellationToken = default)
         => await DbSet.FindAsync([id], cancellationToken);
 

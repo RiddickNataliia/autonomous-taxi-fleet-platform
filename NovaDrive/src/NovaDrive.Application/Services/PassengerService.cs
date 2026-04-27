@@ -2,17 +2,15 @@ namespace NovaDrive.Application.Services;
 
 public interface IPassengerService
 {
-    /// <summary>
-    /// Returns the passenger profile for the currently authenticated user.
-    /// </summary>
+
     Task<PassengerResponse> GetProfile(string auth0UserId, CancellationToken ct = default);
 
-    /// <summary>
-    /// Updates the passenger's full name, home address, and preferred payment method.
-    /// </summary>
+
     Task<PassengerResponse> UpdateProfile(string auth0UserId, UpdateProfileRequest request, CancellationToken ct = default);
 
     Task<IEnumerable<PassengerResponse>> GetAllPassengers(CancellationToken ct = default);
+
+    Task<PassengerResponse> GetById(Guid passengerId, CancellationToken ct = default);
 }
 
 public sealed class PassengerService : IPassengerService
@@ -58,4 +56,12 @@ public sealed class PassengerService : IPassengerService
 
     public async Task<IEnumerable<PassengerResponse>> GetAllPassengers(CancellationToken ct = default)
     => (await _passengerRepo.GetAll(ct)).Select(p => p.ToResponse());
+
+    public async Task<PassengerResponse> GetById(Guid passengerId, CancellationToken ct = default)
+    {
+        var passenger = await _passengerRepo.GetById(passengerId, ct)
+            ?? throw new KeyNotFoundException(UserDomainException.PassengerNotFound);
+
+        return passenger.ToResponse();
+}
 }

@@ -27,7 +27,8 @@ public record RequestRideRequest(
     double EstimatedDistanceKm,
     double PassengerLatitude,
     double PassengerLongitude,
-    string? DiscountCode);
+    string? DiscountCode,
+    VehicleType? PreferredVehicleType);
 
 public record RideResponse(
     Guid RideId,

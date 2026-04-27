@@ -4,6 +4,7 @@ public interface ISupportService
 {
     Task<TicketResponse> CreateTicket(CreateTicketRequest request, CancellationToken ct = default);
     Task<TicketResponse> GetTicket(Guid ticketId, CancellationToken ct = default);
+    Task<IEnumerable<TicketResponse>> GetAllTickets(CancellationToken ct = default);
     Task<IEnumerable<TicketResponse>> GetTicketsByPassenger(Guid passengerId, CancellationToken ct = default);
     Task<TicketResponse> StartWork(Guid ticketId, CancellationToken ct = default);
     Task<TicketResponse> ResolveTicket(Guid ticketId, CancellationToken ct = default);
@@ -43,6 +44,12 @@ public sealed class SupportService : ISupportService
     public async Task<IEnumerable<TicketResponse>> GetTicketsByPassenger(
         Guid passengerId, CancellationToken ct = default)
         => (await _ticketRepo.GetByPassengerId(passengerId, ct)).Select(t => t.ToResponse());
+
+    public async Task<IEnumerable<TicketResponse>> GetAllTickets(CancellationToken ct = default)
+    {
+        var tickets = await _ticketRepo.GetAll(ct);
+        return tickets.Select(t => t.ToResponse());
+    }
 
     public async Task<TicketResponse> StartWork(Guid ticketId, CancellationToken ct = default)
     {

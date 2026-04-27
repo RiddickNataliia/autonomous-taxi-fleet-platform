@@ -4,33 +4,38 @@ using System.Text.Json.Serialization;
 using Grpc.Net.Client;
 using NovaDrive.Api.Grpc;
 
-const bool UseGrpc = true; // flip to false to fall back to REST
+const bool UseGrpc = true;
 
-// Configuration
 var apiBaseUrl  = Environment.GetEnvironmentVariable("API_BASE_URL")  ?? "http://localhost:8080";
 var grpcBaseUrl = Environment.GetEnvironmentVariable("GRPC_BASE_URL") ?? "http://localhost:8081";
 const int    TelemetryIntervalMs   = 3_000;
 const int    DiagnosticIntervalMs  = 15_000;
 const double DiagnosticFaultChance = 0.10;
+const int    RideCheckIntervalMs   = 5_000;
+const int    RideDurationSteps     = 10; // number of telemetry cycles before completing ride
+
 
 var vehicles = new[]
 {
     (VehicleId: Guid.Parse("22b21e43-0151-4ef4-8ea6-1e37d89d5607"),
      ApiKey:    "KTMoiTpEf0as0sf9SLJY0Fc+rbZI5iN/pJf+efIa93I="),
+    (VehicleId: Guid.Parse("dc8eb5ae-48be-4cb0-8f43-117fc8b2cd82"),
+     ApiKey:    "DpUerN4f0Y8WrdN0kyG/ki2ySMtcLnGK1903bEtsP1s="),
+    (VehicleId: Guid.Parse("ce2075d9-add1-4269-bce8-3692560e6e1a"),
+     ApiKey:    "7NjfSPi0XegJuPZQU6pp8QJTwSsXEIg55DPFEG7xU0o="),
+    (VehicleId: Guid.Parse("d02d4cca-dde2-45ca-a010-0a4fbb23c3b2"),
+     ApiKey:    "XjBxsQzOgAKQhbF1L/z0suAG+PPt/lEb3wAqZ8DEm7Q="),
+    (VehicleId: Guid.Parse("0315b4ca-5a0e-401e-97d7-c81b917c4e77"),
+     ApiKey:    "K243OdjFSNOcDJHC5UEjCAaP6wjZD4URh7akmdkUm7I="),
 };
 
 // Validation
 
 if (vehicles[0].ApiKey == "PASTE-PLAIN-TEXT-KEY-HERE")
 {
-    Console.WriteLine(
-        "ERROR: No vehicles configured.\n" +
-        "Edit the vehicles list at the top of Program.cs and paste in your\n" +
-        "vehicle ID and plain-text API key before running.");
+    Console.WriteLine("ERROR: No vehicles configured.");
     return;
 }
-
-// JSON
 
 var json = new JsonSerializerOptions
 {
@@ -38,8 +43,6 @@ var json = new JsonSerializerOptions
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     Converters             = { new JsonStringEnumConverter() },
 };
-
-// Wait for API
 
 Console.WriteLine($"Waiting for API at {apiBaseUrl}...");
 using var healthClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
@@ -53,8 +56,6 @@ while (DateTime.UtcNow < deadline)
     await Task.Delay(2000);
 }
 Console.WriteLine("API is healthy — starting simulation.\n");
-
-// GPS route (circle around Ghent)
 
 static (double Lat, double Lon)[] BuildRoute(double cLat, double cLon, double km, int steps)
 {
@@ -71,8 +72,6 @@ static (double Lat, double Lon)[] BuildRoute(double cLat, double cLon, double km
 
 var route = BuildRoute(cLat: 51.0543, cLon: 3.7174, km: 1.5, steps: 120);
 
-// Sensor fault data
-
 var sensorErrors = new Dictionary<string, string[]>
 {
     ["Lidar"]  = ["LIDAR_RETURN_LOSS", "LIDAR_BEAM_SCATTER", "LIDAR_TEMP_HIGH",  "LIDAR_CALIBRATION_DRIFT"],
@@ -80,14 +79,11 @@ var sensorErrors = new Dictionary<string, string[]>
     ["Camera"] = ["CAM_BLUR_DETECTED", "CAM_LENS_DIRTY",     "CAM_EXPOSURE_ERR", "CAM_FRAME_DROP"],
 };
 
-// Severity weighted: Info 40%, Warning 35%, Error 20%, Critical 5%
 string RandomSeverity()
 {
     var roll = Random.Shared.Next(100);
     return roll < 40 ? "Info" : roll < 75 ? "Warning" : roll < 95 ? "Error" : "Critical";
 }
-
-// Shared diagnostic sender (used by both REST and gRPC vehicle runners)
 
 async Task SendDiagnostic(Guid vehicleId, string apiKey, double speed, double lat, double lon,
     string tag, CancellationToken ct)
@@ -138,7 +134,86 @@ async Task SendDiagnostic(Guid vehicleId, string apiKey, double speed, double la
     }
 }
 
-// REST vehicle runner
+// Ride management — check for assigned rides and manage lifecycle
+async Task ManageRides(Guid vehicleId, string apiKey, string tag, CancellationToken ct)
+{
+    using var client = new HttpClient(new ApiKeyHandler(vehicleId, apiKey))
+    {
+        BaseAddress = new Uri(apiBaseUrl)
+    };
+
+    Guid? activeRideId = null;
+    int   rideSteps    = 0;
+
+    while (!ct.IsCancellationRequested)
+    {
+        try
+        {
+            // Check for a requested ride assigned to this vehicle
+            if (activeRideId is null)
+            {
+                var res = await client.GetAsync($"/api/v1/rides/vehicle/{vehicleId}/pending", ct);
+                if (res.IsSuccessStatusCode && res.StatusCode != System.Net.HttpStatusCode.NoContent)
+                {
+                    var content = await res.Content.ReadAsStringAsync(ct);
+                    var ride    = JsonSerializer.Deserialize<JsonElement>(content, json);
+                    if (ride.TryGetProperty("rideId", out var rideIdProp))
+                    {
+                        activeRideId = Guid.Parse(rideIdProp.GetString()!);
+                        rideSteps    = 0;
+
+                        // Start the ride
+                        var startRes = await client.PutAsync(
+                            $"/api/v1/rides/{activeRideId}/start",
+                            null, ct);
+
+                        if (startRes.IsSuccessStatusCode)
+                            Log(tag, ConsoleColor.Green, $"Started ride {activeRideId}");
+                        else
+                            Log(tag, ConsoleColor.Red, $"Failed to start ride — HTTP {(int)startRes.StatusCode}");
+                    }
+                }
+            }
+            else
+            {
+                // Count steps and complete after enough time has passed
+                rideSteps++;
+                if (rideSteps >= RideDurationSteps)
+                {
+                    var completePayload = new
+                    {
+                        rideId              = activeRideId,
+                        actualDistanceKm    = 10.0 + Random.Shared.NextDouble() * 5,
+                        actualDurationMinutes = RideDurationSteps,
+                        discountCode        = (string?)null,
+                    };
+
+                    var completeRes = await client.PutAsJsonAsync(
+                        $"/api/v1/rides/{activeRideId}/complete",
+                        completePayload, json, ct);
+
+                    if (completeRes.IsSuccessStatusCode)
+                    {
+                        Log(tag, ConsoleColor.Green, $"Completed ride {activeRideId}");
+                        activeRideId = null;
+                        rideSteps    = 0;
+                    }
+                    else
+                    {
+                        Log(tag, ConsoleColor.Red, $"Failed to complete ride — HTTP {(int)completeRes.StatusCode}");
+                        activeRideId = null;
+                    }
+                }
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Log(tag, ConsoleColor.Red, $"Ride management error — {ex.Message}");
+        }
+
+        await Task.Delay(RideCheckIntervalMs, ct);
+    }
+}
 
 async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
 {
@@ -205,8 +280,6 @@ async Task RunVehicle(Guid vehicleId, string apiKey, CancellationToken ct)
     }
 }
 
-// gRPC vehicle runner
-
 async Task RunVehicleGrpc(Guid vehicleId, string apiKey, CancellationToken ct)
 {
     var tag = vehicleId.ToString()[..8];
@@ -264,7 +337,6 @@ async Task RunVehicleGrpc(Guid vehicleId, string apiKey, CancellationToken ct)
             Log(tag, ConsoleColor.Red, $"gRPC error — {ex.Message}");
         }
 
-        // Diagnostics always go over REST — infrequent, no need for gRPC here
         if ((DateTime.UtcNow - lastDiagnosticAt).TotalMilliseconds >= DiagnosticIntervalMs)
         {
             lastDiagnosticAt = DateTime.UtcNow;
@@ -279,8 +351,6 @@ async Task RunVehicleGrpc(Guid vehicleId, string apiKey, CancellationToken ct)
 
     await call.RequestStream.CompleteAsync();
 }
-
-// Start all vehicles concurrently
 
 using var cts = new CancellationTokenSource();
 
@@ -297,13 +367,17 @@ var runner = UseGrpc
 
 try
 {
-    await Task.WhenAll(vehicles.Select(v => runner(v.VehicleId, v.ApiKey, cts.Token)));
+    var tasks = vehicles.Select(v => new[]
+    {
+        runner(v.VehicleId, v.ApiKey, cts.Token),
+        ManageRides(v.VehicleId, v.ApiKey, v.VehicleId.ToString()[..8], cts.Token),
+    }).SelectMany(t => t);
+
+    await Task.WhenAll(tasks);
 }
 catch (OperationCanceledException) { }
 
 Console.WriteLine("Simulator stopped.");
-
-// Helpers
 
 static void Log(string tag, ConsoleColor color, string message)
 {

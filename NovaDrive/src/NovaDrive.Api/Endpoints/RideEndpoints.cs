@@ -129,6 +129,25 @@ public static class RideEndpoints
         .WithName("CancelRide")
         .WithTags("Rides");
 
+        // GET /api/v1/rides/vehicle/{vehicleId}/pending — vehicle checks for assigned rides
+        group.MapGet("/vehicle/{vehicleId:guid}/pending", async (
+            HttpContext       context,
+            Guid              vehicleId,
+            IRideService      rideService,
+            CancellationToken ct) =>
+        {
+            var vehicle = context.Items["AuthenticatedVehicle"] as Vehicle;
+            if (vehicle is null)
+                return Results.Unauthorized();
+
+            var ride = await rideService.GetPendingRideForVehicle(vehicleId, ct);
+            return ride is null ? Results.NoContent() : Results.Ok(ride);
+        })
+        .WithName("GetPendingRideForVehicle")
+        .WithTags("Rides");
+
         return group;
     }
+
+    
 }

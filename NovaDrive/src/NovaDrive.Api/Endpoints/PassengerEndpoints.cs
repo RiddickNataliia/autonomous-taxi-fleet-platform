@@ -62,6 +62,19 @@ public static class PassengerEndpoints
         .WithName("UpdatePassengerProfile")
         .WithTags("Passengers");
 
+        // GET /api/v1/passengers/{passengerId} — admin gets specific passenger
+        group.MapGet("/{passengerId:guid}", async (
+            Guid              passengerId,
+            IPassengerService passengerService,
+            CancellationToken ct) =>
+        {
+            var passenger = await passengerService.GetById(passengerId, ct);
+            return Results.Ok(passenger);
+        })
+        .RequireAuthorization("admin:users")
+        .WithName("GetPassengerById")
+        .WithTags("Passengers");
+
         // GET /api/v1/passengers — admin sees all passengers
         group.MapGet("/", async (
             IPassengerService passengerService,

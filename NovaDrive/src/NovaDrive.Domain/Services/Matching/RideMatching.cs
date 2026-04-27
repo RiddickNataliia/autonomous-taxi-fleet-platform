@@ -1,6 +1,6 @@
 public interface IRideMatchingService
 {
-    Vehicle? FindBestMatch(GpsLocation passengerLocation, IEnumerable<Vehicle> availableVehicles, double estimatedDistanceKm);
+    Vehicle? FindBestMatch(GpsLocation passengerLocation, IEnumerable<Vehicle> availableVehicles, double estimatedDistanceKm, VehicleType? preferredType = null);
 }
 public class RideMatchingService : IRideMatchingService
 {
@@ -13,15 +13,17 @@ public class RideMatchingService : IRideMatchingService
     /// <param name="passengerLocation">The GPS location of the passenger.</param>
     /// <param name="availableVehicles">A list of currently available vehicles.</param>
     /// <param name="estimatedDistanceKm">The estimated distance of the ride in kilometers.</param>
+    /// <param name="preferredType">The preferred vehicle type, or null if no preference.</param>
     /// <returns>The best matching vehicle, or null if no suitable vehicle is found.</returns>
-    public Vehicle? FindBestMatch(GpsLocation passengerLocation, IEnumerable<Vehicle> availableVehicles, double estimatedDistanceKm)
+    public Vehicle? FindBestMatch(GpsLocation passengerLocation, IEnumerable<Vehicle> availableVehicles, double estimatedDistanceKm, VehicleType? preferredType = null)
     {
         return availableVehicles
             .Where(v => v.Status == VehicleStatus.Active)
+            .Where(v => preferredType == null || v.Type == preferredType)
             .Select(v => new
             {
-                Vehicle           = v,
-                DistanceToPickup  = passengerLocation.DistanceTo(v.CurrentLocation)
+                Vehicle = v,
+                DistanceToPickup = passengerLocation.DistanceTo(v.CurrentLocation)
             })
             .Where(x => x.DistanceToPickup <= MaxMatchDistanceKm)
             .Where(x => x.Vehicle.Battery.IsSufficientFor(x.DistanceToPickup + estimatedDistanceKm))

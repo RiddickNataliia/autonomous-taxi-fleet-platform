@@ -25,6 +25,14 @@ internal sealed class VehicleRepository : BaseRepository<Vehicle>, IVehicleRepos
     => await DbSet
         .FirstOrDefaultAsync(v => v.VIN.Value == vin.ToUpperInvariant(), cancellationToken);
 
-    public async Task<IEnumerable<Vehicle>> GetAll(CancellationToken cancellationToken = default)
-    => await DbSet.ToListAsync(cancellationToken);
+    public async Task UpdateVitals(Guid vehicleId, GpsLocation location, BatteryLevel battery, CancellationToken cancellationToken = default)
+    {
+        var vehicle = await DbSet
+            .FirstOrDefaultAsync(v => v.Id == vehicleId, cancellationToken);
+
+        if (vehicle is null) return;
+
+        vehicle.UpdateVitals(location, battery);
+        await Context.SaveChangesAsync(cancellationToken);
+    }
 }

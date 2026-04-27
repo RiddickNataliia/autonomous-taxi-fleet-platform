@@ -6,7 +6,7 @@ public class DiscountCode
     public string Code { get; init; } = string.Empty;
     public DiscountType Type { get; init; } = DiscountType.Unknown;
     public decimal Value { get; init; } // 15 for 15% or 5 for €5.00
-    public DateTimeOffset ExpirationDate { get; init; }
+    public DateTimeOffset ExpirationDate { get; private set; }
     public decimal MinimumRideValue { get; init; }
     public bool IsActive { get; private set; } = true;
 
@@ -60,6 +60,20 @@ public class DiscountCode
         IsActive = false;
     }
 
+    /// <summary>
+    /// Reactivates a previously deactivated discount code.
+    /// The new expiration date must be in the future. 
+    /// If the code was already expired, it cannot be reactivated.
+    /// </summary>
+    public void Activate(DateTimeOffset newExpirationDate)
+    {
+        if (newExpirationDate <= DateTimeOffset.UtcNow)
+            throw new DiscountDomainException(DiscountDomainException.AlreadyExpired);
+
+        IsActive = true;
+        ExpirationDate = newExpirationDate;
+    }
+
 
     /// <summary>
     /// Factory method to create a new discount code with validation. Throws exceptions if any parameters are invalid.
@@ -88,4 +102,6 @@ public class DiscountCode
             ExpirationDate = expirationDate
         };
     }
+
+    
 }

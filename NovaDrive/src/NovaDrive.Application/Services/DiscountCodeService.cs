@@ -7,8 +7,11 @@ namespace NovaDrive.Application.Services;
 public interface IDiscountService
 {
     Task<DiscountCodeResponse> CreateCode(CreateDiscountCodeRequest request, CancellationToken ct = default);
+    Task<IEnumerable<DiscountCodeResponse>> GetAllCodes(CancellationToken ct = default);
     Task<DiscountCodeResponse> GetByCode(string code, CancellationToken ct = default);
     Task DeactivateCode(Guid codeId, CancellationToken ct = default);
+    Task ReactivateCode(Guid codeId, DateTimeOffset newExpirationDate, CancellationToken ct = default);
+    Task DeleteCode(Guid codeId, CancellationToken ct = default);
 }
 public sealed class DiscountService : IDiscountService
 {
@@ -51,12 +54,37 @@ public sealed class DiscountService : IDiscountService
         return entity.ToResponse();
     }
 
+    public async Task<IEnumerable<DiscountCodeResponse>> GetAllCodes(CancellationToken ct = default)
+    {
+        var codes = await _discountRepo.GetAll(ct);
+        return codes.Select(c => c.ToResponse());
+    }
+
     public async Task DeactivateCode(Guid codeId, CancellationToken ct = default)
     {
         var entity = await _discountRepo.GetById(codeId, ct)
             ?? throw new KeyNotFoundException("Discount code not found.");
 
         entity.Deactivate();
+        await _unitOfWork.SaveChanges(ct);
+    }
+
+
+    public async Task ReactivateCode(Guid codeId, DateTimeOffset newExpirationDate, CancellationToken ct = default)
+    {
+        var entity = await _discountRepo.GetById(codeId, ct)
+            ?? throw new KeyNotFoundException("Discount code not found.");
+
+        entity.Activate(newExpirationDate);
+        await _unitOfWork.SaveChanges(ct);
+    }
+
+    public async Task DeleteCode(Guid codeId, CancellationToken ct = default)
+    {
+        var entity = await _discountRepo.GetById(codeId, ct)
+            ?? throw new KeyNotFoundException("Discount code not found.");
+
+        await _discountRepo.Delete(codeId, ct);
         await _unitOfWork.SaveChanges(ct);
     }
 

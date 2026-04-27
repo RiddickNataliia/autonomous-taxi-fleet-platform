@@ -16,4 +16,5 @@ internal sealed class DiscountCodeRepository : BaseRepository<DiscountCode>, IDi
             .FirstOrDefaultAsync(
                 d => d.Code.ToLower() == code.ToLower(),
                 cancellationToken);
+
 }

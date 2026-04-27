@@ -47,6 +47,12 @@ public sealed class TelemetryGrpcService(
 
             await telemetryRepo.Add(telemetry, context.CancellationToken);
 
+            await vehicleRepo.UpdateVitals(
+                vehicle.Id,
+                new GpsLocation(frame.Latitude, frame.Longitude),
+                new BatteryLevel(frame.BatteryPercentage),
+                context.CancellationToken);
+
             logger.LogInformation(
                 "gRPC telemetry stored — vehicle {VehicleId} battery={Battery}% speed={Speed}km/h",
                 vehicleId, frame.BatteryPercentage, frame.SpeedKmh);

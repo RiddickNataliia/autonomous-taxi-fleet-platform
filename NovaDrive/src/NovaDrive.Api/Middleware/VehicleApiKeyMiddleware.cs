@@ -22,7 +22,8 @@ public class VehicleApiKeyMiddleware
     private static readonly string[] ProtectedSuffixes =
     [
         "/start",
-        "/complete"
+        "/complete",
+        "/pending"
     ];
 
     public VehicleApiKeyMiddleware(

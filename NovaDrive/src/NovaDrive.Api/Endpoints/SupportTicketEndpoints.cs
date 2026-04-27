@@ -59,6 +59,18 @@ public static class SupportTicketEndpoints
         .WithName("GetTicket")
         .WithTags("Support");
 
+        // GET /api/v1/support — admin gets all tickets
+        group.MapGet("/", async (
+            ISupportService   supportService,
+            CancellationToken ct) =>
+        {
+            var tickets = await supportService.GetAllTickets(ct);
+            return Results.Ok(tickets);
+        })
+        .RequireAuthorization("admin:support")
+        .WithName("GetAllTickets")
+        .WithTags("Support");
+
         // PUT /api/v1/support/{ticketId}/start — admin starts work
         group.MapPut("/{ticketId:guid}/start", async (
             Guid              ticketId,
