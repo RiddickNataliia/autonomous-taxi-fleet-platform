@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
@@ -54,6 +54,7 @@ export default function RidesPage() {
   const [selectedRide, setSelectedRide] = useState<Ride | null>(null);
   const [paying, setPaying] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const initialLoadDone = useRef(false);
 
   const token = typeof window !== "undefined"
     ? localStorage.getItem("passenger_token")
@@ -77,8 +78,13 @@ export default function RidesPage() {
           if (updated) setSelectedRide(updated);
         }
       }
+    } catch {
+      // silent fail on polling errors
     } finally {
-      setLoading(false);
+      if (!initialLoadDone.current) {
+        initialLoadDone.current = true;
+        setLoading(false);
+      }
     }
   };
 
@@ -263,7 +269,6 @@ export default function RidesPage() {
         )}
       </div>
 
-      {/* Ride detail panel */}
       {selectedRide && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center"
@@ -360,7 +365,6 @@ export default function RidesPage() {
                 )}
               </div>
 
-              {/* Pay now button */}
               {selectedRide.status === "Completed" && !selectedRide.isPaid && (
                 <div>
                   {paymentSuccess ? (

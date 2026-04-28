@@ -118,8 +118,14 @@ export default function HomePage() {
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/passengers/me`, {
             headers: { Authorization: `Bearer ${token}` },
           })
-            .then((r) => r.json())
-            .then((d) => setProfile({ fullName: d.fullName, loyaltyPoints: d.loyaltyPoints }));
+            .then((r) => {
+              if (!r.ok) return null;
+              return r.json();
+            })
+            .then((d) => {
+              if (d) setProfile({ fullName: d.fullName, loyaltyPoints: d.loyaltyPoints });
+            })
+            .catch(() => {});
         });
       });
     }

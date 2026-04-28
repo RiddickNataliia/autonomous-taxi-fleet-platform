@@ -5,12 +5,15 @@
 @code_verifier = GLwJPitfcYXDyjVLlCKg_dKc4qZe3-cxPFII7re0zzw
 @code_challenge = Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI
 
-# ── Step 1: Get Tokens ────────────────────────────────────────────────────────
+@simulatorVehicleId = 28c8c199-b4a4-45dd-af1f-a2db32ab467d
+@simulatorApiKey = STzYkQuM56xizxtwGewHtd5WSTIWyoPWm5ClfcBkD4s=
+
+# Step 1: Get Tokens ────────────────────────────────────────────────────────
 
 # Open in browser, login as PASSENGER, copy code:
-https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
+https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:8080/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@passengerCode = PKONA_PhdRkfex0wuBoHSYAHkFV_9xZGeHPo1TejVKEXy
+@passengerCode = GStRqMPLyy5zm4kd3BWd-6l8KV3DcXKBJbOkT_m2DH_Og
 
 ### Get passenger token
 # @name passengerTokenRequest
@@ -23,9 +26,9 @@ grant_type=authorization_code&client_id={{clientId}}&code={{passengerCode}}&code
 @passengerToken = {{passengerTokenRequest.response.body.access_token}}
 
 # Open in browser, login as ADMIN, copy code:
-https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:5154/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
+https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:8080/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@adminCode = BnT0s0Na5UkwCDRWa2e9vMjclX-P72MFvFtxAaU4Axhja
+@adminCode = cuJkVoSNq2mjmwpnPLk9WzD48tDlYNAbobyMIYpLhRSJ-
 
 ### Get admin token
 # @name adminTokenRequest
@@ -46,9 +49,9 @@ Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-"vin": "2T1BURHE5JC123456",
-"licensePlate": "6-STD-789",
-"modelName": "Hyundai Elantra",
+"vin": "3N1AB7AP4KY123456",
+"licensePlate": "10-STD-567",
+"modelName": "Nissan Sentra",
 "yearOfManufacture": 2021,
 "vehicleType": "Standard"
 }
@@ -76,7 +79,7 @@ Authorization: Bearer {{adminToken}}
 ###
 @vehicleApiKey = {{provisionKey.response.body.plainTextKey}}
 
-### Update vitals — set location near Brussels
+### Update vitals — set location near Gent
 PUT {{baseUrl}}/api/v1/vehicles/vitals
 X-Vehicle-Id: {{vehicleId}}
 X-Api-Key: {{vehicleApiKey}}
@@ -84,8 +87,8 @@ Content-Type: application/json
 
 {
   "vehicleId": "{{vehicleId}}",
-  "latitude": 50.8503,
-  "longitude": 4.3517,
+  "latitude": 51.0543,
+  "longitude": 3.7174,
   "batteryPercentage": 85
 }
 
@@ -133,14 +136,6 @@ Authorization: Bearer {{adminToken}}
 
 
 
-### Test GraphQL ride fields
-POST {{baseUrl}}/graphql
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ilc2Z0ZaUEdWbUlMaHVKOUZyMXA2RyJ9.eyJlbWFpbCI6ImFkbWluQG5vdmFkcml2ZS50ZXN0IiwiaXNzIjoiaHR0cHM6Ly9kZXYtd2NzaGdzZW5zbjJldndzZy51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjlkMGZiYjQ3NDFiODQ1OTg4OTBjYTIwIiwiYXVkIjpbImh0dHBzOi8vbm92YWRyaXZlLWFwaSIsImh0dHBzOi8vZGV2LXdjc2hnc2Vuc24yZXZ3c2cudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTc3NzI5NjcyOSwiZXhwIjoxNzc3MzgzMTI5LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiYXpwIjoiZmRUMkRhUklmQ1Y0aFR2UFZhQlVSemV5R0RUMG1IaGYiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbjpkaXNjb3VudHMiLCJhZG1pbjpmbGVldCIsImFkbWluOnN1cHBvcnQiLCJhZG1pbjp1c2VycyJdfQ.CcnAFPKYaUl54dLnFGibEEsUVg_uxnwUb8_W4xEjkjbDTK4-8GD4VhWgW7iH9m0VM_0eOKEwwA1pI4ZhZ8dgh0FDxR7kfExK6dZeRmhl076eUIpMVrl6lKiYTvZ9a1niQ62y8tlKGdkzrObQjHPFG6N4TrM7p_QiZQNh0D3Jgd_mz8u3lE5b8vYV9AQImc3GJeCFBL3Gk0vOwYu8pwb6W_symLZisMkSQ9e9oXzQIZKjdBwtITAOuOPL08BIvaeOXCWU0cWfnCBdteTkjeUVsL-icJyLfy0WgbbNKxv_Fr-ENLaN9Yz74lb7BZ7MujF8HnGlAXRPZwvm4frcd-ecXA
-Content-Type: application/json
-
-{
-  "query": "{ rides { id netAmount vatAmount loyaltyDiscountApplied codeDiscountApplied loyaltyPointsUsed distanceKm durationMinutes isPaid requestTime completedTime } }"
-}
 # Step 3: Passenger Setup ───────────────────────────────────────────────────
 
 ###
@@ -174,7 +169,16 @@ Content-Type: application/json
 GET {{baseUrl}}/api/v1/passengers
 Authorization: Bearer {{adminToken}}
 
-# ── Step 4: Rides ─────────────────────────────────────────────────────────────
+### 
+@passengerId = 90194e55-3b8a-4a6f-b76e-f8e095177acf
+
+###
+
+### Get passenger by ID (admin)
+GET {{baseUrl}}/api/v1/passengers/{{passengerId}}
+Authorization: Bearer {{adminToken}}
+
+# Step 4: Rides ─────────────────────────────────────────────────────────────
 
 ###
 
@@ -185,41 +189,37 @@ Authorization: Bearer {{passengerToken}}
 Content-Type: application/json
 
 {
-  "departure": "Brussels Central Station",
-  "destination": "Brussels Airport",
+  "departure": "Gent St-Pieters Station",
+  "destination": "Gent Korenmarkt",
   "estimatedDistanceKm": 15.5,
-  "passengerLatitude": 50.8503,
-  "passengerLongitude": 4.3517,
+  "passengerLatitude": 51.0543,
+  "passengerLongitude": 3.7174,
   "discountCode": null,
-  "preferredVehicleType": "Standard"
+  "preferredVehicleType": "Luxury"
 }
 
 ###
 @rideId = {{requestRide.response.body.rideId}}
 
-### Get ride history
-GET {{baseUrl}}/api/v1/rides
-Authorization: Bearer {{passengerToken}}
-
-###
 
 ### Get active ride
 GET {{baseUrl}}/api/v1/rides/active
 Authorization: Bearer {{passengerToken}}
 
+
 ###
 
 ### Start ride (vehicle)
 PUT {{baseUrl}}/api/v1/rides/{{rideId}}/start
-X-Vehicle-Id: {{vehicleId}}
-X-Api-Key: {{vehicleApiKey}}
+X-Vehicle-Id: {{simulatorVehicleId}}
+X-Api-Key: {{simulatorApiKey}}
 
 ###
 
 ### Complete ride (vehicle)
 PUT {{baseUrl}}/api/v1/rides/{{rideId}}/complete
-X-Vehicle-Id: {{vehicleId}}
-X-Api-Key: {{vehicleApiKey}}
+X-Vehicle-Id: {{simulatorVehicleId}}
+X-Api-Key: {{simulatorApiKey}}
 Content-Type: application/json
 
 {
@@ -230,7 +230,13 @@ Content-Type: application/json
 
 ###
 
-### Cancel ride (passenger — run this instead of complete to test cancellation)
+### Get ride history
+GET {{baseUrl}}/api/v1/rides
+Authorization: Bearer {{passengerToken}}
+
+###
+
+### Cancel ride (passenger)
 PUT {{baseUrl}}/api/v1/rides/{{rideId}}/cancel
 Authorization: Bearer {{passengerToken}}
 
@@ -260,7 +266,7 @@ GET {{baseUrl}}/api/v1/payments/{{rideId}}
 Authorization: Bearer {{passengerToken}}
 
 
-# ── Step 6: Support Tickets ───────────────────────────────────────────────────
+# Step 6: Support Tickets ───────────────────────────────────────────────────
 
 ### Create support ticket (passenger)
 # @name createTicket
@@ -288,6 +294,12 @@ Authorization: Bearer {{adminToken}}
 
 ###
 
+### Get all support tickets (admin)
+GET {{baseUrl}}/api/v1/support
+Authorization: Bearer {{adminToken}}
+
+###
+
 ### Start work on ticket (admin)
 PUT {{baseUrl}}/api/v1/support/{{ticketId}}/start
 Authorization: Bearer {{adminToken}}
@@ -309,9 +321,8 @@ Content-Type: application/json
 PUT {{baseUrl}}/api/v1/support/{{ticketId}}/resolve
 Authorization: Bearer {{adminToken}}
 
-# ── Step 7: Discount Codes ────────────────────────────────────────────────────
+# Step 7: Discount Codes ────────────────────────────────────────────────────
 
-###
 
 ### Create percentage discount code (admin)
 # @name createDiscount
@@ -320,7 +331,7 @@ Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "code": "SUMMER24",
+  "code": "SUMMER22",
   "type": "Percentage",
   "value": 15.0,
   "expirationDate": "2027-01-01T00:00:00Z",
@@ -330,32 +341,50 @@ Content-Type: application/json
 ###
 @discountId = {{createDiscount.response.body.id}}
 
-### Get discount code by code string
-GET {{baseUrl}}/api/v1/discounts/SUMMER26
-Authorization: Bearer {{adminToken}}
-
-###
-
 ### Create flat discount code (admin)
 POST {{baseUrl}}/api/v1/discounts
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "code": "WELCOME15",
+  "code": "WELCOME9",
   "type": "Flat",
-  "value": 15.00,
+  "value": 9.00,
   "expirationDate": "2027-01-01T00:00:00Z",
   "minimumRideValue": 10.00
 }
 
 ###
 
-### Deactivate SUMMER26 discount code (admin)
+### Get discount code by code string
+GET {{baseUrl}}/api/v1/discounts/SUMMER22
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Get all discount codes (admin)
+GET {{baseUrl}}/api/v1/discounts
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Deactivate discount code (admin)
+PUT {{baseUrl}}/api/v1/discounts/{{discountId}}/deactivate
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Reactivate discount code (admin)
+PUT {{baseUrl}}/api/v1/discounts/{{discountId}}/activate
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Permanently delete discount code (admin)
 DELETE {{baseUrl}}/api/v1/discounts/{{discountId}}
 Authorization: Bearer {{adminToken}}
 
-# ── Step 8: Telemetry & Diagnostics ──────────────────────────────────────────
+# Step 8: Telemetry & Diagnostics ──────────────────────────────────────────
 
 ###
 
@@ -406,7 +435,7 @@ Authorization: Bearer {{adminToken}}
 GET {{baseUrl}}/api/v1/diagnostics/severity/Warning
 Authorization: Bearer {{adminToken}}
 
-# ── Step 9: Cleanup ───────────────────────────────────────────────────────────
+# Step 9: Cleanup ───────────────────────────────────────────────────────────
 
 ###
 
@@ -420,7 +449,7 @@ Authorization: Bearer {{adminToken}}
 DELETE {{baseUrl}}/api/v1/vehicles/{{vehicleId}}/api-key
 Authorization: Bearer {{adminToken}}
 
-# ── GraphQL ───────────────────────────────────────────────────────────────────
+# Step 10: GraphQL ──────────────────────────────────────────────────────────────
 # GraphQL is used for admin dashboard queries
 
 ### GraphQL — fleet overview

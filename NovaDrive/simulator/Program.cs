@@ -27,6 +27,8 @@ var vehicles = new[]
      ApiKey:    "XjBxsQzOgAKQhbF1L/z0suAG+PPt/lEb3wAqZ8DEm7Q="),
     (VehicleId: Guid.Parse("0315b4ca-5a0e-401e-97d7-c81b917c4e77"),
      ApiKey:    "K243OdjFSNOcDJHC5UEjCAaP6wjZD4URh7akmdkUm7I="),
+    (VehicleId: Guid.Parse("28c8c199-b4a4-45dd-af1f-a2db32ab467d"),
+        ApiKey:    "STzYkQuM56xizxtwGewHtd5WSTIWyoPWm5ClfcBkD4s="),
 };
 
 // Validation

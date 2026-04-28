@@ -68,6 +68,19 @@ public static class DiscountCodeEndpoints
         .WithName("ReactivateDiscountCode")
         .WithTags("Discounts");
 
+        // PUT /api/v1/discounts/{codeId}/deactivate — admin deactivates code
+        group.MapPut("/{codeId:guid}/deactivate", async (
+            Guid              codeId,
+            IDiscountService  discountService,
+            CancellationToken ct) =>
+        {
+            await discountService.DeactivateCode(codeId, ct);
+            return Results.NoContent();
+        })
+        .RequireAuthorization("admin:discounts")
+        .WithName("DeactivateDiscountCode")
+        .WithTags("Discounts");
+
         return group;
     }
 

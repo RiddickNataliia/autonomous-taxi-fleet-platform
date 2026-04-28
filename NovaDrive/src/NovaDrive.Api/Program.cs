@@ -219,6 +219,7 @@ finally
 
 static bool HasScopeOrPermission(ClaimsPrincipal user, string required)
 {
+    // Check scope claim
     var inScope = user.Claims
         .Where(c => c.Type == "scope")
         .SelectMany(c => c.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
@@ -226,27 +227,33 @@ static bool HasScopeOrPermission(ClaimsPrincipal user, string required)
 
     if (inScope) return true;
 
-    foreach (var claim in user.Claims.Where(c => c.Type == "permissions"))
+    // Check permissions and custom namespace permissions
+    var claimTypes = new[] { "permissions", "https://novadrive/permissions" };
+    
+    foreach (var claimType in claimTypes)
     {
-        if (string.Equals(claim.Value, required, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        foreach (var value in claim.Value.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries))
-            if (string.Equals(value, required, StringComparison.OrdinalIgnoreCase))
+        foreach (var claim in user.Claims.Where(c => c.Type == claimType))
+        {
+            if (string.Equals(claim.Value, required, StringComparison.OrdinalIgnoreCase))
                 return true;
 
-        if (claim.Value.StartsWith('['))
-        {
-            try
+            foreach (var value in claim.Value.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries))
+                if (string.Equals(value, required, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+            if (claim.Value.StartsWith('['))
             {
-                using var doc = JsonDocument.Parse(claim.Value);
-                if (doc.RootElement.ValueKind == JsonValueKind.Array)
-                    foreach (var item in doc.RootElement.EnumerateArray())
-                        if (item.ValueKind == JsonValueKind.String &&
-                            string.Equals(item.GetString(), required, StringComparison.OrdinalIgnoreCase))
-                            return true;
+                try
+                {
+                    using var doc = JsonDocument.Parse(claim.Value);
+                    if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                        foreach (var item in doc.RootElement.EnumerateArray())
+                            if (item.ValueKind == JsonValueKind.String &&
+                                string.Equals(item.GetString(), required, StringComparison.OrdinalIgnoreCase))
+                                return true;
+                }
+                catch { }
             }
-            catch { }
         }
     }
     return false;
