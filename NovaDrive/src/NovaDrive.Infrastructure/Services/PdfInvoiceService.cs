@@ -74,8 +74,10 @@ public sealed class PdfInvoiceService : IInvoiceService
                             cols.RelativeColumn(2);
                         });
 
-                        table.Cell().Text("Net amount").Bold();
-                        table.Cell().AlignRight().Text($"€{netAmount:F2}");
+                        var grossFare = netAmount + loyaltyDiscount + codeDiscount;
+
+                        table.Cell().Text("Gross fare").Bold();
+                        table.Cell().AlignRight().Text($"€{grossFare:F2}");
 
                         if (loyaltyDiscount > 0)
                         {
@@ -88,6 +90,9 @@ public sealed class PdfInvoiceService : IInvoiceService
                             table.Cell().Text("Promo discount").FontColor("#28a745");
                             table.Cell().AlignRight().Text($"-€{codeDiscount:F2}").FontColor("#28a745");
                         }
+
+                        table.Cell().Text("Net amount").Bold();
+                        table.Cell().AlignRight().Text($"€{netAmount:F2}");
 
                         table.Cell().Text("VAT (21%)").Bold();
                         table.Cell().AlignRight().Text($"€{vatAmount:F2}");
