@@ -47,17 +47,23 @@ public class Query
         => await vehicleRepo.GetById(id, ct);
 
     // All passengers
-    public async Task<IEnumerable<Passenger>> GetPassengers(
+    public async Task<IEnumerable<PassengerResponse>> GetPassengers(
         [Service] IPassengerRepository passengerRepo,
         CancellationToken ct = default)
-        => await passengerRepo.GetAll(ct);
+        {
+            var passengers = await passengerRepo.GetAll(ct);
+            return passengers.Select(p => p.ToResponse());
+        }
 
     // Single passenger by ID
-    public async Task<Passenger?> GetPassenger(
+    public async Task<PassengerResponse?> GetPassenger(
         Guid id,
         [Service] IPassengerRepository passengerRepo,
         CancellationToken ct = default)
-        => await passengerRepo.GetById(id, ct);
+        {
+            var passenger = await passengerRepo.GetById(id, ct);
+            return passenger?.ToResponse();
+        }
 
     // Telemetry for a vehicle
     public async Task<IEnumerable<Telemetry>> GetTelemetry(

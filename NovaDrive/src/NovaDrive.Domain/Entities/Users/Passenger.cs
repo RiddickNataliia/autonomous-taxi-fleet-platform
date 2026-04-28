@@ -15,10 +15,7 @@ public class Passenger
 
     private Passenger() { }
 
-    /// <summary>
-    /// Factory method — creates a passenger profile linked to an existing User.
-    /// Call this immediately after User.Create() when registering a passenger.
-    /// </summary>
+
     public static Passenger Create(Guid userId)
     {
         if (userId == Guid.Empty)
@@ -30,9 +27,7 @@ public class Passenger
         };
     }
 
-    /// <summary>
-    /// Updates editable profile fields.
-    /// </summary>
+
     public void UpdateProfile(string fullName, string homeAddress, PaymentMethod paymentMethod)
     {
         if (string.IsNullOrWhiteSpace(fullName))
@@ -49,9 +44,6 @@ public class Passenger
         PreferredPaymentMethod = paymentMethod;
     }
 
-    /// <summary>
-    /// Awards loyalty points after a successful ride payment.
-    /// </summary>
     public void EarnPoints(int points)
     {
         if (points < 0)
@@ -62,10 +54,7 @@ public class Passenger
         LoyaltyPoints += points;
     }
 
-    /// <summary>
-    /// Deducts loyalty points consumed as a discount.
-    /// Only called after PricingEngine determines the exact points spent.
-    /// </summary>
+
     public void DeductPoints(int points)
     {
         if (points < 0)

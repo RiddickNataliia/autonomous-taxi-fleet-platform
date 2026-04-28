@@ -22,7 +22,7 @@ public static class SupportTicketEndpoints
             var ticket = await supportService.CreateTicket(requestWithPassenger, ct);
             return Results.Created($"/api/v1/support/{ticket.TicketId}", ticket);
         })
-        .RequireAuthorization("read:profile")
+        .RequireAuthorization("update:profile")
         .WithName("CreateTicket")
         .WithTags("Support");
 

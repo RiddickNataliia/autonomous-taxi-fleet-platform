@@ -11,16 +11,12 @@ public class User
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? LastLoginAt { get; set; }
 
-    // Navigation property
-    // Null for admin and vehicle-system users who have no passenger profile
     public Passenger? PassengerProfile { get; private set; }
 
     // Private constructor for EF Core
     private User() { }
 
-    /// <summary>
-    /// Factory method for creating any user. Use Passenger.Create() for passenger accounts.
-    /// </summary>
+
     public static User Create(string email, string auth0UserId, UserRole role)
     {
         if (string.IsNullOrWhiteSpace(email))

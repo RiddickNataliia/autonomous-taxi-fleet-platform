@@ -166,6 +166,14 @@ export default function RidesPage() {
 
               {activeRide.status === "Requested" && (
                 <>
+                  {(() => {
+                    const waitMinutes = (Date.now() - new Date(activeRide.requestTime).getTime()) / 60000;
+                    return waitMinutes > 1 ? (
+                    <div className="mt-3 text-xs text-yellow-400 bg-yellow-400/10 rounded-xl px-3 py-2">
+                      Taking longer than usual. No vehicles may be available nearby — you can cancel and try again.
+                    </div>
+                  ) : null;
+                })()}
                   {cancelConfirm === activeRide.rideId ? (
                     <div className="mt-4 space-y-2">
                       <p className="text-xs text-gray-400 text-center">

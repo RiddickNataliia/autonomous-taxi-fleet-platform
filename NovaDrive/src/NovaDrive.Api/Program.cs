@@ -89,14 +89,34 @@ try
     //  CORS 
     builder.Services.AddCors(options =>
         options.AddDefaultPolicy(policy =>
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()));
+        {
+            if (builder.Environment.IsDevelopment())
+                policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+            else
+                policy.WithOrigins(
+                        "https://admin.novadrive.com",
+                        "https://app.novadrive.com")
+                    .WithMethods("GET", "POST", "PUT", "DELETE")
+                    .WithHeaders("Authorization", "Content-Type");
+        }));
                   
     //  JSON options (e.g. for serializing enums as strings in API responses)
     builder.Services.ConfigureHttpJsonOptions(options =>
     {
         options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.AddFixedWindowLimiter("registration", config =>
+        {
+            config.PermitLimit         = 5;
+            config.Window              = TimeSpan.FromMinutes(15);
+            config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            config.QueueLimit          = 0;
+        });
+
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     });
 
     //  Build 
@@ -125,6 +145,7 @@ try
 
     app.UseHttpsRedirection();
     app.UseCors();
+    app.UseRateLimiter();
     app.UseVehicleApiKeyAuth(); // Custom middleware for authenticating vehicles using API keys, done before standard auth to allow vehicle simulators to authenticate without user tokens
     app.UseAuthentication();
     app.UseAuthorization();

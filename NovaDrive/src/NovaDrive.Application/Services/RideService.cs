@@ -6,7 +6,7 @@ public interface IRideService
     Task<RideResponse> RequestRide(RequestRideRequest request, CancellationToken ct = default);
     Task<RideResponse> StartRide(Guid rideId, CancellationToken ct = default);
     Task<RideResponse> CompleteRide(CompleteRideRequest request, CancellationToken ct = default);
-    Task<RideResponse> CancelRide(Guid rideId, CancellationToken ct = default);
+    Task<RideResponse> CancelRide(Guid rideId, Guid passengerId, CancellationToken ct = default);
     Task<IEnumerable<RideResponse>> GetRidesByPassenger(Guid passengerId, CancellationToken ct = default);
     Task<IEnumerable<RideResponse>> GetAllRides(CancellationToken ct = default);
     Task<RideResponse?> GetActiveRide(Guid passengerId, CancellationToken ct = default);
@@ -46,10 +46,14 @@ public sealed class RideService : IRideService
         // verify passenger exists before assigning a vehicle
         _ = await _passengerRepo.GetById(request.PassengerId, ct)
             ?? throw new KeyNotFoundException(UserDomainException.PassengerNotFound);
+        // ensure passenger doesn't already have an active ride before trying to find a match
+        var existingActive = await _rideRepo.GetActiveByPassengerId(request.PassengerId, ct);
+            if (existingActive is not null)
+                throw new InvalidOperationException("You already have an active ride.");
 
         var activeVehicles    = await _vehicleRepo.GetAllActive(ct);
         var passengerLocation = new GpsLocation(request.PassengerLatitude, request.PassengerLongitude);
-        var vehicle           = _matchingService.FindBestMatch(passengerLocation, activeVehicles, request.EstimatedDistanceKm, request.PreferredVehicleType)
+        var vehicle = _matchingService.FindBestMatch(passengerLocation, activeVehicles, request.EstimatedDistanceKm, request.PreferredVehicleType)
                                 ?? throw new InvalidOperationException(
                                     request.PreferredVehicleType is null
                                         ? "No available vehicle found within range. Please try again shortly."
@@ -62,6 +66,8 @@ public sealed class RideService : IRideService
             Destination = request.Destination
         };
         ride.RequestRide();
+        if (!string.IsNullOrWhiteSpace(request.DiscountCode))
+            ride.SetDiscountCode(request.DiscountCode);
 
         await _rideRepo.Add(ride, ct);
         await _unitOfWork.SaveChanges(ct);
@@ -93,9 +99,13 @@ public sealed class RideService : IRideService
         var vehicle = await _vehicleRepo.GetById(ride.VehicleId, ct)
             ?? throw new KeyNotFoundException(VehicleDomainException.NotFound);
 
+        var codeToUse = !string.IsNullOrWhiteSpace(request.DiscountCode)
+            ? request.DiscountCode
+            : ride.DiscountCodeUsed;
+
         DiscountCode? discountCode = null;
-        if (!string.IsNullOrWhiteSpace(request.DiscountCode))
-            discountCode = await _discountRepo.GetByCode(request.DiscountCode, ct);
+        if (!string.IsNullOrWhiteSpace(codeToUse))
+            discountCode = await _discountRepo.GetByCode(codeToUse, ct);
 
         var result = _pricingEngine.CalculateFinalPrice(
             distanceKm:      request.ActualDistanceKm,
@@ -113,29 +123,60 @@ public sealed class RideService : IRideService
         return ride.ToResponse();
     }
 
-    public async Task<RideResponse> CancelRide(Guid rideId, CancellationToken ct = default)
+    /// <summary>
+    /// Cancels a ride if it's not already en route. Only the passenger who requested the ride can cancel it.
+    /// </summary>
+    /// <param name="rideId"></param>
+    /// <param name="passengerId"></param>
+    /// <param name="ct"></param>
+    /// <exception cref="KeyNotFoundException"></exception>
+    /// <exception cref="UnauthorizedAccessException"></exception>
+    public async Task<RideResponse> CancelRide(Guid rideId, Guid passengerId, CancellationToken ct = default)
     {
         var ride = await _rideRepo.GetById(rideId, ct)
             ?? throw new KeyNotFoundException(RideDomainException.NotFound);
+
+        if (ride.PassengerId != passengerId)
+            throw new UnauthorizedAccessException(RideDomainException.NotOwner);
 
         ride.CancelRide();
         await _unitOfWork.SaveChanges(ct);
         return ride.ToResponse();
     }
 
+    /// <summary>
+    /// Returns all rides for a given passenger.
+    /// </summary>
+    /// <param name="passengerId"></param>
+    /// <param name="ct"></param>
     public async Task<IEnumerable<RideResponse>> GetRidesByPassenger(
         Guid passengerId, CancellationToken ct = default)
         => (await _rideRepo.GetByPassengerId(passengerId, ct)).Select(ride => ride.ToResponse());
 
+    /// <summary>
+    /// Returns all rides in the system. 
+    /// </summary>
+    /// <param name="ct"></param>
     public async Task<IEnumerable<RideResponse>> GetAllRides(CancellationToken ct = default)
         => (await _rideRepo.GetAll(ct)).Select(r => r.ToResponse());
 
+    /// <summary>
+    /// Returns the active ride for a given passenger, if one exists. 
+    /// </summary>
+    /// <param name="passengerId"></param>
+    /// <param name="ct"></param>
     public async Task<RideResponse?> GetActiveRide(Guid passengerId, CancellationToken ct = default)
     {
         var ride = await _rideRepo.GetActiveByPassengerId(passengerId, ct);
         return ride?.ToResponse();
     }
 
+    /// <summary>
+    /// Returns the pending ride for a given vehicle, if one exists. 
+    /// This is used by the vehicle to check if it has an assigned ride when it comes online or finishes a ride.
+    /// </summary>
+    /// <param name="vehicleId"></param>
+    /// <param name="ct"></param>
     public async Task<RideResponse?> GetPendingRideForVehicle(Guid vehicleId, CancellationToken ct = default)
     {
         var ride = await _rideRepo.GetPendingByVehicleId(vehicleId, ct);

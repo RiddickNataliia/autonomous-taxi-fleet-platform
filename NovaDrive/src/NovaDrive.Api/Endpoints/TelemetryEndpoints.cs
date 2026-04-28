@@ -34,6 +34,7 @@ public static class TelemetryEndpoints
             CancellationToken    ct,
             int                  limit = 100) =>
         {
+            limit = Math.Clamp(limit, 1, 500);
             var data = await telemetryRepo.GetByVehicleId(vehicleId, limit, ct);
             return Results.Ok(data.Select(t => t.ToResponse()));
         })

@@ -14,9 +14,7 @@ public class SupportTicket
     // Private constructor for EF Core
     private SupportTicket() { }
 
-    /// <summary>
-    /// Factory method to create a new ticket in the 'Open' state.
-    /// </summary>
+
     public static SupportTicket Create(Guid passengerId, string subject, string description)
     {
         if (string.IsNullOrWhiteSpace(subject)) 
@@ -33,9 +31,7 @@ public class SupportTicket
         };
     }
 
-    /// <summary>
-    /// Moves the ticket to 'In Progress'.
-    /// </summary>
+
     public void StartWork()
     {
         if (Status != TicketStatus.Open)
@@ -44,9 +40,7 @@ public class SupportTicket
         Status = TicketStatus.InProgress;
     }
 
-    /// <summary>
-    /// Resolves the ticket and records the timestamp.
-    /// </summary>
+
     public void Resolve()
     {
 
@@ -57,9 +51,7 @@ public class SupportTicket
         ResolvedAt = DateTimeOffset.UtcNow;
     }
 
-    /// <summary>
-    /// Allows changing priority if the issue is more urgent than initially reported.
-    /// </summary>
+
     public void UpdatePriority(TicketPriority newPriority)
     {
         if (newPriority == TicketPriority.Unknown)

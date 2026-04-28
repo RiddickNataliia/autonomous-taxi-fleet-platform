@@ -16,16 +16,12 @@ public class Ride
     public decimal VatAmount { get; private set; }
     public decimal FinalPrice { get; private set; } 
     public bool IsPaid { get; private set; }
+    public string? DiscountCodeUsed { get; private set; }
     public decimal LoyaltyDiscountApplied { get; private set; }
     public int LoyaltyPointsUsed { get; private set; }
     public decimal CodeDiscountApplied { get; private set; }
 
     
-
-    /// <summary>
-    /// Initializes the ride by setting its status to Requested.
-    /// </summary>
-    /// <exception cref="RideDomainException.AlreadyInitialized">Thrown if the ride is already initialized or has a status other than Unknown.</exception>
     public void RequestRide()
     {
         if (Status != RideStatus.Unknown) 
@@ -34,10 +30,6 @@ public class Ride
         Status = RideStatus.Requested;
     }
 
-    /// <summary>
-    /// Transitions the ride to the EnRoute status.
-    /// </summary>
-    /// <exception cref="RideDomainException.NotRequested">Thrown if the ride is not currently in the Requested state.</exception>
     public void StartRide()
     {
         if (Status != RideStatus.Requested)
@@ -70,12 +62,6 @@ public class Ride
         Status = RideStatus.Completed;
     }
     
-
-    /// <summary>
-    /// Cancels the ride if it hasn't been finished yet.
-    /// </summary>
-    /// <exception cref="RideDomainException.AlreadyCompleted">Thrown if the ride is already marked as Completed.</exception>
-    /// <exception cref="RideDomainException.CannotCancelEnRoute">Thrown if the ride is already en route.</exception>
     public void CancelRide()
     {
         if (Status == RideStatus.Completed)
@@ -89,12 +75,18 @@ public class Ride
         Status = RideStatus.Canceled;
     }
 
+
     public void MarkAsPaid()
     {
         if (Status != RideStatus.Completed)
             throw new RideDomainException(RideDomainException.NotCompleted);
 
         IsPaid = true;
+    }
+
+    public void SetDiscountCode(string? code)
+    {
+        DiscountCodeUsed = code;
     }
 
 }

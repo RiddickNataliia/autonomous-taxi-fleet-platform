@@ -1,3 +1,4 @@
+
 global using Xunit;
 global using FluentAssertions;
 global using System.Net;
@@ -19,6 +20,7 @@ global using NovaDrive.Infrastructure.Data;
 // WebApplicationFactory
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using Microsoft.Extensions.Logging.Abstractions;
 
 // Domain
 global using NovaDrive.Domain.Entities;
@@ -29,3 +31,8 @@ global using NovaDrive.Domain.Services;
 
 // Infrastructure
 global using NovaDrive.Infrastructure.Repositories;
+global using NovaDrive.Infrastructure.Payments;
+
+// Application
+global using NovaDrive.Application.Services;
+global using NovaDrive.Application.DTOs;

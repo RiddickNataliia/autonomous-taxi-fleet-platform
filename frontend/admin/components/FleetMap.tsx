@@ -1,7 +1,9 @@
 "use client";
 
+import { useMap } from "react-leaflet";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { useEffect } from "react";
 
 interface Vehicle {
   id: string;
@@ -18,6 +20,14 @@ function getColor(v: Vehicle): string {
   if (v.type === "LUXURY") return "#378ADD";
   if (v.type === "VAN") return "#EF9F27";
   return "#1D9E75";
+}
+
+function RecenterMap({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom(), { animate: true });
+  }, [center[0], center[1]]);
+  return null;
 }
 
 export default function FleetMap({ vehicles }: { vehicles: Vehicle[] }) {
@@ -40,6 +50,7 @@ export default function FleetMap({ vehicles }: { vehicles: Vehicle[] }) {
       style={{ height: "100%", width: "100%" }}
       scrollWheelZoom={true}
     >
+      <RecenterMap center={center} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

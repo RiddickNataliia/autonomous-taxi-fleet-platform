@@ -38,6 +38,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(r => r.FinalPrice).HasPrecision(18, 2).IsRequired();
             entity.Property(r => r.LoyaltyDiscountApplied).HasPrecision(18, 2);
             entity.Property(r => r.CodeDiscountApplied).HasPrecision(18, 2);
+            entity.Property(r => r.DiscountCodeUsed).HasMaxLength(50).IsRequired(false);
             entity.Property(r => r.Status)
                 .HasConversion<string>() 
                 .IsRequired();

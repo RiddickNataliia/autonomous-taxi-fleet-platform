@@ -6,11 +6,19 @@ public static class PaymentEndpoints
     {
         // POST /api/v1/payments — process payment for a completed ride
         group.MapPost("/", async (
-            ProcessPaymentRequest request,
-            IPaymentService       paymentService,
-            CancellationToken     ct) =>
+            HttpContext              context,
+            ProcessPaymentRequest    request,
+            IPaymentService          paymentService,
+            IUserProvisioningService provisioning,
+            CancellationToken        ct) =>
         {
-            var transaction = await paymentService.ProcessPayment(request, ct);
+            var auth0UserId = context.User.Auth0UserId()
+                ?? throw new UnauthorizedAccessException("Missing subject claim.");
+            var email = context.User.Email()
+                ?? throw new UnauthorizedAccessException("Missing email claim.");
+
+            var (passenger, _) = await provisioning.EnsurePassengerExists(auth0UserId, email, ct);
+            var transaction = await paymentService.ProcessPayment(request, passenger.PassengerId, ct);
             return Results.Created($"/api/v1/payments/{transaction.RideId}", transaction);
         })
         .RequireAuthorization("create:rides")
@@ -26,7 +34,7 @@ public static class PaymentEndpoints
             var transaction = await paymentService.GetTransactionByRide(rideId, ct);
             return Results.Ok(transaction);
         })
-        .RequireAuthorization("read:rides")
+        .RequireAuthorization("admin:support")
         .WithName("GetTransactionByRide")
         .WithTags("Payments");
 

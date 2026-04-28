@@ -53,10 +53,7 @@ public class Vehicle
         };
     }
 
-    /// <summary>
-    /// Assigns a new API key to this vehicle.
-    /// </summary>
-    /// <param name="hashedKey">The BCrypt hash of the generated API key.</param>
+
     public void SetApiKey(string hashedKey)
     {
         if (string.IsNullOrWhiteSpace(hashedKey))
@@ -74,11 +71,6 @@ public class Vehicle
     }
 
 
-
-    /// <summary>
-    /// Activates the vehicle for use in the fleet.
-    /// </summary>
-    /// <exception cref="VehicleDomainException">Thrown if the vehicle is overdue for an inspection.</exception>
     public void Activate() 
     {
         if (Status == VehicleStatus.Active) return;
@@ -101,18 +93,13 @@ public class Vehicle
         Status = VehicleStatus.Inactive;
     }
 
-    /// <summary>
-    /// Manually marks vehicle for maintenance
-    /// </summary>
     public void MarkForMaintenance()
     {
         if (Status == VehicleStatus.Maintenance) return;
         Status = VehicleStatus.Maintenance;
     }
 
-    /// <summary>
-    /// Records a successful safety inspection, resetting the 12-month inspection timer.
-    /// </summary>
+
     public void RecordInspection() => LastInspectionDate = DateTimeOffset.UtcNow;
 
     /// <summary>
@@ -138,14 +125,14 @@ public class Vehicle
         if (Battery.IsCritical)
         {
             if (Status == VehicleStatus.EnRoute)
-                Status = VehicleStatus.Maintenance; // stranded mid-ride (maybe I'll add sending a replacement later)
+                Status = VehicleStatus.Maintenance; // stranded mid-ride 
             else if (Status == VehicleStatus.Active)
                 Status = VehicleStatus.Inactive;
         }
     }
 
     /// <summary>
-    /// Removes the vehicle's API key hash, immediately preventing the vehicle
+    /// Removes the vehicle's API key hash, preventing the vehicle
     /// simulator from authenticating. Used when a key is compromised or the
     /// vehicle is decommissioned. A new key can be provisioned afterwards.
     /// </summary>

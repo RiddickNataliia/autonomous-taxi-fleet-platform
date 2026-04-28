@@ -118,11 +118,19 @@ public static class RideEndpoints
 
         // PUT /api/v1/rides/{rideId}/cancel — passenger cancels a ride
         group.MapPut("/{rideId:guid}/cancel", async (
-            Guid              rideId,
-            IRideService      rideService,
-            CancellationToken ct) =>
+            HttpContext              context,
+            Guid                     rideId,
+            IRideService             rideService,
+            IUserProvisioningService provisioning,
+            CancellationToken        ct) =>
         {
-            var ride = await rideService.CancelRide(rideId, ct);
+            var auth0UserId = context.User.Auth0UserId()
+                ?? throw new UnauthorizedAccessException("Missing subject claim.");
+            var email = context.User.Email()
+                ?? throw new UnauthorizedAccessException("Missing email claim.");
+
+            var (passenger, _) = await provisioning.EnsurePassengerExists(auth0UserId, email, ct);
+            var ride = await rideService.CancelRide(rideId, passenger.PassengerId, ct);
             return Results.Ok(ride);
         })
         .RequireAuthorization("create:rides")

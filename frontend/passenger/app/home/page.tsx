@@ -92,16 +92,20 @@ export default function HomePage() {
   const { isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   const router = useRouter();
 
-  const [departure, setDeparture] = useState("");
-  const [destination, setDestination] = useState("");
+  const [departure, setDeparture]       = useState("");
+  const [destination, setDestination]   = useState("");
   const [departureLat, setDepartureLat] = useState(51.0543);
   const [departureLon, setDepartureLon] = useState(3.7174);
-  const [vehicleType, setVehicleType] = useState<string | null>(null);
+  const [vehicleType, setVehicleType]   = useState<string | null>(null);
   const [discountCode, setDiscountCode] = useState("");
   const [showDiscount, setShowDiscount] = useState(false);
-  const [booking, setBooking] = useState(false);
-  const [error, setError] = useState("");
-  const [profile, setProfile] = useState<{ fullName: string; loyaltyPoints: number } | null>(null);
+  const [booking, setBooking]           = useState(false);
+  const [error, setError]               = useState("");
+  const [profile, setProfile]           = useState<{ fullName: string; loyaltyPoints: number } | null>(null);
+
+  // Discount code verification state
+  const [codeStatus, setCodeStatus]   = useState<"idle" | "checking" | "valid" | "invalid">("idle");
+  const [codeMessage, setCodeMessage] = useState("");
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push("/login");
@@ -130,6 +134,44 @@ export default function HomePage() {
       });
     }
   }, [isAuthenticated]);
+
+  const verifyCode = async () => {
+    if (!discountCode) return;
+    setCodeStatus("checking");
+    setCodeMessage("");
+    try {
+      const token = localStorage.getItem("passenger_token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/discounts/${discountCode}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) {
+        setCodeStatus("invalid");
+        setCodeMessage("Code not found.");
+        return;
+      }
+      const data = await res.json();
+      if (!data.isActive) {
+        setCodeStatus("invalid");
+        setCodeMessage("This code is inactive.");
+        return;
+      }
+      if (new Date(data.expirationDate) < new Date()) {
+        setCodeStatus("invalid");
+        setCodeMessage("This code has expired.");
+        return;
+      }
+      setCodeStatus("valid");
+      setCodeMessage(
+        data.type === "Percentage"
+          ? `${data.value}% off · min. ride value €${data.minimumRideValue.toFixed(2)}`
+          : `€${data.value.toFixed(2)} off · min. ride value €${data.minimumRideValue.toFixed(2)}`
+      );
+    } catch {
+      setCodeStatus("invalid");
+      setCodeMessage("Could not verify code.");
+    }
+  };
 
   const requestRide = async () => {
     if (!departure || !destination) {
@@ -160,12 +202,16 @@ export default function HomePage() {
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         const msg = (data?.detail || data?.message || data?.title || "").toLowerCase();
-        if (msg.includes("no available") || msg.includes("not found") || res.status === 404 || res.status === 400) {
+        if (msg.includes("no available")) {
           setError(
-            vehicleType
+            vehicleType && vehicleType !== "Any"
               ? `No ${vehicleType} vehicles available nearby. Try selecting "Any" or a different type.`
               : "No vehicles available nearby right now. Please try again in a few minutes."
           );
+        } else if (msg.includes("active ride") || msg.includes("already have")) {
+          setError("You already have an active ride. Please complete or cancel it before booking a new one.");
+        } else if (msg.includes("invalid or has expired") || msg.includes("discount")) {
+          setError("Discount code is invalid or has expired.");
         } else {
           setError("Could not book ride. Please try again.");
         }
@@ -247,20 +293,51 @@ export default function HomePage() {
             ))}
           </div>
 
+          {/* Discount code section */}
           <div>
             <button
-              onClick={() => setShowDiscount(!showDiscount)}
+              onClick={() => {
+                setShowDiscount(!showDiscount);
+                if (showDiscount) {
+                  setDiscountCode("");
+                  setCodeStatus("idle");
+                  setCodeMessage("");
+                }
+              }}
               className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
               {showDiscount ? "Hide" : "+ Add discount code"}
             </button>
+
             {showDiscount && (
-              <input
-                value={discountCode}
-                onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                placeholder="e.g. SUMMER24"
-                className="mt-2 w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-gray-300"
-              />
+              <div className="mt-2 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <input
+                    value={discountCode}
+                    onChange={(e) => {
+                      setDiscountCode(e.target.value.toUpperCase());
+                      setCodeStatus("idle");
+                      setCodeMessage("");
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && verifyCode()}
+                    placeholder="e.g. SUMMER24"
+                    className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  />
+                  <button
+                    onClick={verifyCode}
+                    disabled={!discountCode || codeStatus === "checking"}
+                    className="text-xs px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors flex-shrink-0 font-medium"
+                  >
+                    {codeStatus === "checking" ? "..." : "Verify"}
+                  </button>
+                </div>
+
+                {codeMessage && (
+                  <p className={`text-xs px-1 ${codeStatus === "valid" ? "text-green-600" : "text-red-500"}`}>
+                    {codeStatus === "valid" ? "✓ " : "✗ "}{codeMessage}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 

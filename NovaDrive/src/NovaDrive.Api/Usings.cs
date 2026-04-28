@@ -14,6 +14,8 @@ global using Grpc.Core;
 global using NovaDrive.Api.Grpc;
 global using HotChocolate.Authorization;
 global using NovaDrive.Api.GraphQL;
+global using System.Threading.RateLimiting;
+global using Microsoft.AspNetCore.RateLimiting;
 
 
 global using NovaDrive.Domain.Interfaces;

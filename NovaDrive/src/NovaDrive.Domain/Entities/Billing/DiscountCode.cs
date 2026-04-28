@@ -51,20 +51,12 @@ public class DiscountCode
         };
     }
 
-    /// <summary>
-    /// Deactivates a discount code.
-    /// </summary>
     public void Deactivate()
     {
         if (!IsActive) return;
         IsActive = false;
     }
 
-    /// <summary>
-    /// Reactivates a previously deactivated discount code.
-    /// The new expiration date must be in the future. 
-    /// If the code was already expired, it cannot be reactivated.
-    /// </summary>
     public void Activate(DateTimeOffset newExpirationDate)
     {
         if (newExpirationDate <= DateTimeOffset.UtcNow)

@@ -23,6 +23,7 @@ public static class PassengerEndpoints
                 : Results.Ok(response);
         })
         .RequireAuthorization("read:profile")
+        .RequireRateLimiting("registration")
         .WithName("EnsurePassengerProfile")
         .WithTags("Passengers");
 

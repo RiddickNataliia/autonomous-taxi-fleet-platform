@@ -13,7 +13,7 @@
 # Open in browser, login as PASSENGER, copy code:
 https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:8080/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@passengerCode = GStRqMPLyy5zm4kd3BWd-6l8KV3DcXKBJbOkT_m2DH_Og
+@passengerCode = duoYqfcLEwInzljq6Uwptp4wyLlxy-TIIPBi2pZesGb3K
 
 ### Get passenger token
 # @name passengerTokenRequest
@@ -28,7 +28,7 @@ grant_type=authorization_code&client_id={{clientId}}&code={{passengerCode}}&code
 # Open in browser, login as ADMIN, copy code:
 https://dev-wcshgsensn2evwsg.us.auth0.com/authorize?response_type=code&client_id=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf&redirect_uri=http://localhost:8080/callback&scope=openid%20profile%20email&audience=https://novadrive-api&code_challenge=Gl83nteyIR7yYwW-URq3RxAfVyACEcNsukIIuvrvHzI&code_challenge_method=S256&prompt=login
 
-@adminCode = cuJkVoSNq2mjmwpnPLk9WzD48tDlYNAbobyMIYpLhRSJ-
+@adminCode = 1HaJG1YipynwbSurTp0YJa_rzLIRKve9gnx4BC7a71UMT
 
 ### Get admin token
 # @name adminTokenRequest
@@ -49,11 +49,11 @@ Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-"vin": "3N1AB7AP4KY123456",
-"licensePlate": "10-STD-567",
-"modelName": "Nissan Sentra",
-"yearOfManufacture": 2021,
-"vehicleType": "Standard"
+  "vin": "WVWZZZ1JZXW000123",
+  "licensePlate": "20-LUX-890",
+  "modelName": "Volkswagen Passat",
+  "yearOfManufacture": 2022,
+  "vehicleType": "Luxury"
 }
 
 ###
@@ -202,7 +202,7 @@ Content-Type: application/json
 @rideId = {{requestRide.response.body.rideId}}
 
 
-### Get active ride
+### Get active ride (passenger sees their current ride)
 GET {{baseUrl}}/api/v1/rides/active
 Authorization: Bearer {{passengerToken}}
 
@@ -263,7 +263,7 @@ Content-Type: application/json
 
 ### Get transaction by ride
 GET {{baseUrl}}/api/v1/payments/{{rideId}}
-Authorization: Bearer {{passengerToken}}
+Authorization: Bearer {{adminToken}}
 
 
 # Step 6: Support Tickets ───────────────────────────────────────────────────
@@ -347,9 +347,9 @@ Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "code": "WELCOME9",
+  "code": "WELCOME7",
   "type": "Flat",
-  "value": 9.00,
+  "value": 7.00,
   "expirationDate": "2027-01-01T00:00:00Z",
   "minimumRideValue": 10.00
 }
@@ -358,7 +358,7 @@ Content-Type: application/json
 
 ### Get discount code by code string
 GET {{baseUrl}}/api/v1/discounts/SUMMER22
-Authorization: Bearer {{adminToken}}
+Authorization: Bearer {{passengerToken}}
 
 ###
 
@@ -484,7 +484,8 @@ POST {{baseUrl}}/graphql
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
-{ "query": "{ passengers { id fullName loyaltyPoints preferredPaymentMethod } }" }
+{ "query": "{ passengers { passengerId fullName loyaltyPoints preferredPaymentMethod } }" }
+
 
 ###
 

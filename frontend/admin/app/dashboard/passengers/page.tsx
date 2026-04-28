@@ -7,7 +7,7 @@ import { gql } from "@apollo/client/core";
 const GET_PASSENGERS = gql`
   query GetPassengers {
     passengers {
-      id
+      passengerId
       fullName
       loyaltyPoints
       preferredPaymentMethod
@@ -16,7 +16,7 @@ const GET_PASSENGERS = gql`
 `;
 
 interface PassengerSummary {
-  id: string;
+  passengerId: string;
   fullName: string;
   loyaltyPoints: number;
   preferredPaymentMethod: string;
@@ -101,13 +101,13 @@ export default function PassengersPage() {
                 <tbody>
                   {passengers.map((p) => (
                     <tr
-                      key={p.id}
+                      key={p.passengerId}
                       onClick={() => {
-                        setSelectedId(p.id);
+                        setSelectedId(p.passengerId);
                         setDetail(null);
                       }}
                       className={`border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        selectedId === p.id ? "bg-gray-50" : ""
+                        selectedId === p.passengerId ? "bg-gray-50" : ""
                       }`}
                     >
                       <td className="px-4 py-3 font-medium text-gray-900">

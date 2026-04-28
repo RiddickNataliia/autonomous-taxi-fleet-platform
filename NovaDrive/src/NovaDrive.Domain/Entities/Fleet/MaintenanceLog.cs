@@ -10,9 +10,6 @@ public class MaintenanceLog
     public decimal Cost { get; init; }
     public int? NextServiceMileage { get; init; } // Optional: Only used if the service was a mileage-based check
 
-    /// <summary>
-    /// Static factory method to ensure a log is created with a non-negative cost.
-    /// </summary>
     public static MaintenanceLog Create(Guid vehicleId, string description, string technician, decimal cost)
     {
         if (cost < 0) 

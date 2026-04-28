@@ -38,9 +38,10 @@ public static class DiscountCodeEndpoints
             var discount = await discountService.GetByCode(code, ct);
             return Results.Ok(discount);
         })
-        .RequireAuthorization("admin:discounts")
+        .RequireAuthorization()
         .WithName("GetDiscountCode")
         .WithTags("Discounts");
+        
 
         // DELETE /api/v1/discounts/{codeId} — admin permanently deletes code
         group.MapDelete("/{codeId:guid}", async (

@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const { loginWithRedirect, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
+  const { loginWithRedirect, isAuthenticated, isLoading, getAccessTokenSilently, error } = useAuth0();
   const router = useRouter();
 
   useEffect(() => {
@@ -32,12 +32,17 @@ export default function LoginPage() {
           <h1 className="text-lg font-medium text-gray-900">Nova Drive</h1>
           <p className="text-sm text-gray-400 mt-1">Admin Console</p>
         </div>
-        <button
-          onClick={() => loginWithRedirect()}
-          className="w-full bg-gray-900 text-white text-sm py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          Login with Auth0
-        </button>
+        {error && (
+            <div className="mb-4 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2">
+              {error.message}
+            </div>
+          )}
+          <button
+            onClick={() => loginWithRedirect()}
+            className="w-full bg-gray-900 text-white text-sm py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Login with Auth0
+          </button>
       </div>
     </div>
   );
