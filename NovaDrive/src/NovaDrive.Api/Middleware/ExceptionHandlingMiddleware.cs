@@ -49,7 +49,7 @@ public class ExceptionHandlingMiddleware
             _                              => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
         };
 
-        // Log 5xx as errors, 4xx as warnings to keeps the noise down
+        // Log 5xx as errors, 4xx as warnings 
         if (statusCode >= 500)
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
         else

@@ -8,7 +8,7 @@ internal sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<
 
         var connectionString =
             Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")
-            ?? "Host=localhost;Port=5432;Database=novadrive;Username=postgres;Password=postgres"; // Fall back to a local dev connection string when no environment variable is set.
+            ?? "Host=localhost;Port=5432;Database=novadrive;Username=postgres;Password=postgres"; // Fall back 
 
         optionsBuilder.UseNpgsql(
             connectionString,

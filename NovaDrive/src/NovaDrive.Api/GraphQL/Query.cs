@@ -1,5 +1,5 @@
 namespace NovaDrive.Api.GraphQL;
-
+[Authorize]
 public class Query
 {
     // All rides — filterable by status

@@ -21,7 +21,7 @@ try
             rollingInterval: RollingInterval.Day,
             retainedFileCountLimit: 14));
 
-    //  Infrastructure (Postgres + MongoDB + all repositories + UoW) 
+    //  Infrastructure (Postgres + MongoDB + all repositories) 
     builder.Services.AddInfrastructure(builder.Configuration);
 
     //  Application services + FluentValidation 
@@ -32,7 +32,8 @@ try
         .AddGraphQLServer()
         .AddQueryType<Query>()
         .AddFiltering()
-        .AddSorting();
+        .AddSorting()
+        .AddAuthorization();
 
     // gRPC — telemetry ingestion from vehicles
     builder.Services.AddGrpc(options =>
@@ -158,7 +159,7 @@ try
 
     // GraphQL endpoint — Banana Cake Pop UI available at /graphql in Development
     app.MapGraphQL()
-        .RequireAuthorization("admin:fleet");
+        .RequireAuthorization();
 
     // Callback endpoint for Auth0 Authorization Code flow testing
     app.MapGet("/callback", (string? code, string? state, string? error, string? error_description) =>

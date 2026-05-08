@@ -96,6 +96,40 @@ services:
       mongo:
         condition: service_healthy
 
+  admin:
+    build:
+      context: ../frontend/admin
+      dockerfile: Dockerfile
+    container_name: novadrive-admin
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_GRAPHQL_URL=http://localhost:8080/graphql
+      - NEXT_PUBLIC_AUTH0_DOMAIN=dev-wcshgsensn2evwsg.us.auth0.com
+      - NEXT_PUBLIC_AUTH0_CLIENT_ID=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf
+      - NEXT_PUBLIC_AUTH0_AUDIENCE=https://novadrive-api
+    depends_on:
+      api:
+        condition: service_healthy
+
+  passenger:
+    build:
+      context: ../frontend/passenger
+      dockerfile: Dockerfile
+    container_name: novadrive-passenger
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_AUTH0_DOMAIN=dev-wcshgsensn2evwsg.us.auth0.com
+      - NEXT_PUBLIC_AUTH0_CLIENT_ID=fdT2DaRIfCV4hTvPVaBURzeyGDT0mHhf
+      - NEXT_PUBLIC_AUTH0_AUDIENCE=https://novadrive-api
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   mongo_data:

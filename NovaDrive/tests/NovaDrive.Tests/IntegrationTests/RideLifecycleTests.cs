@@ -154,7 +154,7 @@ public class RideLifecycleTests : IAsyncLifetime
             EstimatedDistanceKm:  10.0,
             PassengerLatitude:    50.8503,
             PassengerLongitude:   4.3517,
-            DiscountCode:         null,
+            DiscountCode:         "TESTCODE",
             PreferredVehicleType: null));
 
         await _rideService.StartRide(rideResponse.RideId);
@@ -165,7 +165,7 @@ public class RideLifecycleTests : IAsyncLifetime
             RideId:                rideResponse.RideId,
             ActualDistanceKm:      10.0,
             ActualDurationMinutes: 20,
-            DiscountCode:          "TESTCODE"));
+            DiscountCode:          null));
 
         completedRide.NetAmount.Should().Be(11.50m);
         completedRide.CodeDiscountApplied.Should().Be(5.00m);
@@ -205,7 +205,7 @@ public class RideLifecycleTests : IAsyncLifetime
     [Fact]
     public async Task Payment_WhenAmountIs666_MarksTransactionAsFailed()
     {
-        // The DemoPaymentGateway throws on amount 666 — verifies failure path
+        // The DemoPaymentGateway throws on amount 666 
         var (passenger, _) = await SeedAsync();
 
         var rideResponse = await _rideService.RequestRide(new RequestRideRequest(
