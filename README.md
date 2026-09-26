@@ -1,4 +1,12 @@
 # NovaDrive — Autonomous Taxi Fleet Platform
+[![C#](https://img.shields.io/badge/C%23-.NET-239120?logo=csharp&logoColor=white)](#)
+[![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Web%20API-512BD4?logo=dotnet&logoColor=white)](#)
+[![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?logo=next.js&logoColor=white)](#)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql&logoColor=white)](#)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?logo=mongodb&logoColor=white)](#)
+[![GraphQL](https://img.shields.io/badge/API-HotChocolate%20GraphQL-E10098?logo=graphql&logoColor=white)](#)
+[![gRPC](https://img.shields.io/badge/Transport-gRPC-244c5a)](#)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](#)
 
 NovaDrive is a full-stack platform for operating a fleet of autonomous taxis: a .NET backend that ingests live vehicle telemetry, matches passengers to rides, handles billing, and exposes REST, GraphQL, and gRPC APIs, plus two Next.js frontends — a passenger app and an admin/ops dashboard — and a vehicle simulator for local development.
 
